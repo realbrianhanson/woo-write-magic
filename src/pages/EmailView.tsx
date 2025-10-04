@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Copy, Save, RefreshCw } from "lucide-react";
+import { ArrowLeft, Copy, Save, RefreshCw, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EmailMetrics } from "@/components/EmailMetrics";
@@ -12,6 +12,11 @@ import { UniqueMechanismDisplay } from "@/components/UniqueMechanismDisplay";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { hasPostScript, buildPostScriptPrompt } from "@/lib/postscript";
+import { 
+  detectBannedWords, 
+  findSentencesWithBannedWords, 
+  buildBannedWordReplacementPrompt 
+} from "@/lib/bannedWords";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -36,6 +41,8 @@ export default function EmailView() {
   const [isRegeneratingMechanism, setIsRegeneratingMechanism] = useState(false);
   const [isAddingPS, setIsAddingPS] = useState(false);
   const [showPSWarning, setShowPSWarning] = useState(false);
+  const [bannedWordsFound, setBannedWordsFound] = useState<string[]>([]);
+  const [isReplacingBannedWords, setIsReplacingBannedWords] = useState(false);
 
   useEffect(() => {
     loadEmail();
@@ -45,6 +52,7 @@ export default function EmailView() {
     if (emailBody) {
       setMetrics(analyzeReadability(emailBody));
       setShowPSWarning(!hasPostScript(emailBody));
+      setBannedWordsFound(detectBannedWords(emailBody));
     }
   }, [emailBody]);
 
@@ -230,6 +238,60 @@ ${email.ctas[selectedCta]}`;
     }
   };
 
+  const handleReplaceBannedWords = async () => {
+    setIsReplacingBannedWords(true);
+    try {
+      const problematicSentences = findSentencesWithBannedWords(emailBody);
+      
+      if (problematicSentences.length === 0) {
+        toast({
+          title: "No banned words found",
+          description: "Email is clean!",
+        });
+        return;
+      }
+
+      const prompt = buildBannedWordReplacementPrompt(
+        problematicSentences,
+        emailBody
+      );
+
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
+        "generate-email",
+        { body: { prompt } }
+      );
+
+      if (aiError) throw aiError;
+
+      // Parse the replacement sentences
+      const replacements = JSON.parse(aiResponse.generatedText);
+      
+      // Replace sentences in the email body
+      let updatedBody = emailBody;
+      problematicSentences.forEach((original, index) => {
+        if (replacements[index]) {
+          updatedBody = updatedBody.replace(original, replacements[index]);
+        }
+      });
+
+      setEmailBody(updatedBody);
+      setBannedWordsFound(detectBannedWords(updatedBody));
+
+      toast({
+        title: "Banned words replaced!",
+        description: `Rewrote ${problematicSentences.length} sentence(s) to sound more human.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Replacement failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsReplacingBannedWords(false);
+    }
+  };
+
   if (!email) return null;
 
   return (
@@ -306,6 +368,37 @@ ${email.ctas[selectedCta]}`;
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800 dark:text-yellow-200">
                 Missing P.S. section - this is critical for conversions. Click "Add P.S." to append one.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {bannedWordsFound.length > 0 && (
+            <Alert className="mb-4 border-red-500 bg-red-50 dark:bg-red-950">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800 dark:text-red-200">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <strong>Detected AI-sounding words:</strong> {bannedWordsFound.join(", ")}
+                    <br />
+                    <span className="text-sm">These make your email sound robotic. Click "Replace Banned Words" to fix.</span>
+                  </div>
+                  <Button
+                    onClick={handleReplaceBannedWords}
+                    variant="destructive"
+                    size="sm"
+                    disabled={isReplacingBannedWords}
+                    className="ml-4 shrink-0"
+                  >
+                    {isReplacingBannedWords ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Replacing...
+                      </>
+                    ) : (
+                      "Replace Banned Words"
+                    )}
+                  </Button>
+                </div>
               </AlertDescription>
             </Alert>
           )}

@@ -1,3 +1,5 @@
+import { BANNED_WORDS } from "./bannedWords";
+
 interface CampaignSettings {
   productName: string;
   description: string;
@@ -35,6 +37,14 @@ P.S. [benefit reminder + urgency element + clear CTA]
 
 Example:
 "P.S. Remember, this framework helped 347 course creators add $10K/month to their revenue. But early access closes in 48 hours. Click here to claim your spot before it's gone."
+`;
+
+const BANNED_WORDS_WARNING = `
+CRITICAL: AVOID AI-SOUNDING WORDS
+Do NOT use these words - they sound robotic and AI-generated:
+${BANNED_WORDS.join(", ")}
+
+Write like a real human. Use conversational, natural language.
 `;
 
 export function buildEmailPrompt(
@@ -101,6 +111,7 @@ AUDIENCE & PSYCHOLOGY:
 
 ${READABILITY_RULES}
 ${PS_REQUIREMENT}
+${BANNED_WORDS_WARNING}
 ${simplificationRules}
 ${uniqueMechanismRules}
 
