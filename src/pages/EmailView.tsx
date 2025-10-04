@@ -12,6 +12,7 @@ import { UniqueMechanismDisplay } from "@/components/UniqueMechanismDisplay";
 import { CritiquePanel } from "@/components/CritiquePanel";
 import { ParagraphPreviewDialog } from "@/components/ParagraphPreviewDialog";
 import { ReaderFocusDisplay } from "@/components/ReaderFocusDisplay";
+import { FrameworkDisplay } from "@/components/FrameworkDisplay";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { hasPostScript, buildPostScriptPrompt } from "@/lib/postscript";
@@ -69,6 +70,7 @@ export default function EmailView() {
   >([]);
   const [pendingFormattedText, setPendingFormattedText] = useState("");
   const [isIncreasingReaderFocus, setIsIncreasingReaderFocus] = useState(false);
+  const [frameworkInfo, setFrameworkInfo] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     loadEmail();
@@ -114,6 +116,9 @@ export default function EmailView() {
     }
     if (data.metadata && typeof data.metadata === 'object' && 'uniqueMechanism' in data.metadata) {
       setUniqueMechanism(data.metadata.uniqueMechanism as unknown as UniqueMechanism);
+    }
+    if (data.metadata && typeof data.metadata === 'object' && 'framework' in data.metadata) {
+      setFrameworkInfo(data.metadata.framework as unknown as { id: string; name: string });
     }
   };
 
@@ -639,6 +644,17 @@ ${email.ctas[selectedCta]}`;
               metrics={readerFocusMetrics}
               onIncreaseReaderFocus={handleIncreaseReaderFocus}
               isIncreasing={isIncreasingReaderFocus}
+            />
+          </div>
+        )}
+
+        {/* Framework Display */}
+        {frameworkInfo && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Framework Used</h2>
+            <FrameworkDisplay 
+              frameworkId={frameworkInfo.id}
+              frameworkName={frameworkInfo.name}
             />
           </div>
         )}

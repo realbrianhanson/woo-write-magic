@@ -94,6 +94,9 @@ export default function CampaignBuilder() {
       if (emailData.uniqueMechanism) {
         metadata.uniqueMechanism = emailData.uniqueMechanism;
       }
+      if (emailData.framework) {
+        metadata.framework = emailData.framework;
+      }
 
       // Save email
       const { data: email, error: emailError } = await supabase

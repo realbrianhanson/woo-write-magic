@@ -1,4 +1,5 @@
 import { BANNED_WORDS } from "./bannedWords";
+import { selectBestFramework } from "./frameworks";
 
 interface CampaignSettings {
   productName: string;
@@ -93,6 +94,12 @@ IMPORTANT: Return the mechanism details in the metadata for display.
 `
     : '';
 
+  // Select best framework based on campaign type and emotion
+  const framework = selectBestFramework(
+    settings.campaignType,
+    settings.primaryEmotion
+  );
+
   return `You are a master direct response copywriter specializing in high-converting email campaigns.
 
 CAMPAIGN TYPE: ${settings.campaignType}
@@ -109,19 +116,16 @@ AUDIENCE & PSYCHOLOGY:
 - Desired Transformation: ${settings.desiredResult}
 - Primary Emotion: ${settings.primaryEmotion}
 
+COPYWRITING FRAMEWORK: ${framework.acronym} (${framework.name})
+${framework.description}
+
+${framework.prompt}
+
 ${READABILITY_RULES}
 ${PS_REQUIREMENT}
 ${BANNED_WORDS_WARNING}
 ${simplificationRules}
 ${uniqueMechanismRules}
-
-DIRECT RESPONSE FRAMEWORK:
-1. Hook with pattern interrupt (first 3 seconds critical)
-2. Amplify the pain or desire
-3. Present transformation/solution
-4. Build credibility with proof
-5. Create urgency
-6. Clear, compelling call-to-action
 
 OUTPUT REQUIREMENTS:
 Return ONLY valid JSON in this exact format:
@@ -141,8 +145,12 @@ Return ONLY valid JSON in this exact format:
     "nickname": "The catchy name for the mechanism",
     "rootCause": "The surprising root cause explanation",
     "metaphor": "The simple metaphor used to explain it"
-  }` : ''}
+  }` : ''},
+  "framework": {
+    "id": "${framework.id}",
+    "name": "${framework.name}"
+  }
 }
 
-Remember: Simple words. Short sentences. Maximum impact.`;
+Remember: Follow the ${framework.acronym} framework structure. Simple words. Short sentences. Maximum impact.`;
 }
