@@ -28,6 +28,7 @@ export default function CampaignBuilder() {
     sequenceLength: "5",
     primaryEmotion: "Hope & Transformation",
     useUniqueMechanism: true,
+    storyStructure: "surprise",
   });
 
   const handleSubmit = async (e: React.FormEvent, simplify: boolean = false) => {
@@ -66,6 +67,7 @@ export default function CampaignBuilder() {
           primaryEmotion: formData.primaryEmotion,
           sequenceLength: parseInt(formData.sequenceLength),
           useUniqueMechanism: formData.useUniqueMechanism,
+          storyStructure: formData.storyStructure,
         },
         1,
         parseInt(formData.sequenceLength),
@@ -259,6 +261,57 @@ export default function CampaignBuilder() {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="Greed & Opportunity" id="greed" />
                 <Label htmlFor="greed">Greed & Opportunity</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Story Structure Selection */}
+          <div className="space-y-4 bg-card p-6 rounded-lg border border-primary/20">
+            <h2 className="text-xl font-semibold">Pick a Story Structure</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Choose the narrative mode for your email. Each structure uses different proven examples.
+            </p>
+            <RadioGroup
+              value={formData.storyStructure}
+              onValueChange={(value) =>
+                setFormData({ ...formData, storyStructure: value })
+              }
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="mistake" id="mistake" />
+                <Label htmlFor="mistake" className="font-normal cursor-pointer">
+                  The Mistake I Made
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="weird" id="weird" />
+                <Label htmlFor="weird" className="font-normal cursor-pointer">
+                  The Weird Thing I Noticed
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="truth" id="truth" />
+                <Label htmlFor="truth" className="font-normal cursor-pointer">
+                  The Uncomfortable Truth
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="realization" id="realization" />
+                <Label htmlFor="realization" className="font-normal cursor-pointer">
+                  The 2AM Realization
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="conversation" id="conversation" />
+                <Label htmlFor="conversation" className="font-normal cursor-pointer">
+                  The Overheard Conversation
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="surprise" id="surprise" />
+                <Label htmlFor="surprise" className="font-normal cursor-pointer">
+                  None - Let AI surprise me
+                </Label>
               </div>
             </RadioGroup>
           </div>

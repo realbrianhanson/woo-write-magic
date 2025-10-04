@@ -11,66 +11,209 @@ interface CampaignSettings {
   primaryEmotion: string;
   sequenceLength?: number;
   useUniqueMechanism?: boolean;
+  storyStructure?: string;
 }
 
-const EXAMPLE_OPENINGS = `
-HERE ARE EXAMPLES OF HOW TO START. Study these. Match this energy.
+const STORY_STRUCTURES = {
+  mistake: {
+    name: "The Mistake I Made",
+    examples: `
+EXAMPLE 1:
+"Three years ago I made a $47,000 mistake.
 
-PERSONAL STORY START:
+I hired a 'growth agency' to scale my email list.
+
+They promised 10,000 subscribers in 90 days. Professional landing pages. Automated funnels. The works.
+
+What I got: 9,847 fake emails. A 0.3% open rate. And a PayPal dispute.
+
+That's when I learned the one thing that actually builds an engaged list..."
+
+EXAMPLE 2:
+"I launched my course to 2,300 people last month.
+
+Made $412.
+
+Know why?
+
+Because I followed every 'expert's' advice. Perfect sales page. Video testimonials. Early bird pricing.
+
+I forgot the one thing that actually matters: They didn't know me yet.
+
+Here's what I did instead..."
+`,
+  },
+  weird: {
+    name: "The Weird Thing I Noticed",
+    examples: `
+EXAMPLE 1:
+"I was scrolling Instagram at 11pm when I noticed something weird.
+
+Every single course creator I follow posts the same content.
+
+'5 tips for...'
+'The secret to...'
+'How I went from X to Y...'
+
+Same format. Same energy. Same boring results.
+
+But one guy? Different.
+
+He posts photos of his messy desk. Rants about stuff that pisses him off. Shares his actual revenue numbers.
+
+And he's doing 6 figures a month.
+
+Here's what he's doing that nobody else is..."
+
+EXAMPLE 2:
+"You ever notice how the best-performing emails are the ugly ones?
+
+No fancy design. No images. Just plain text that looks like your friend wrote it drunk at 2am.
+
+I tested this last week. Sent two versions of the same email.
+
+Version A: Beautiful template. Logo. Formatted perfectly.
+Version B: Plain text. Typo in the subject line. Looked terrible.
+
+Version B got 4x the clicks.
+
+Weird, right?"
+`,
+  },
+  truth: {
+    name: "The Uncomfortable Truth",
+    examples: `
+EXAMPLE 1:
+"Nobody cares about your product.
+
+I know that stings. But it's true.
+
+They don't care about your features. Your benefits. Your testimonials.
+
+They care about Thursday at 2pm when their boss asks for the third revision.
+
+They care about checking their bank account and feeling sick.
+
+They care about their kid asking why they work so much.
+
+If your marketing doesn't speak to THAT? You're invisible."
+
+EXAMPLE 2:
+"Your email list doesn't hate you.
+
+They just forgot you exist.
+
+You email them once a month with 'value content' and wonder why they don't buy.
+
+Here's what they're thinking: 'Who is this? Did I sign up for this?'
+
+You need to email MORE, not less. And make every email feel like a text from a friend.
+
+That's it. That's the whole thing."
+`,
+  },
+  realization: {
+    name: "The 2AM Realization",
+    examples: `
+EXAMPLE 1:
+"It was 2:47am and I couldn't sleep.
+
+I was lying there thinking about the 347 people on my email list who never open my emails.
+
+And it hit me.
+
+I was writing to impress other marketers. Not to connect with real people.
+
+Every email sounded like a TED talk. Professional. Polished. Perfect.
+
+And totally forgettable.
+
+The next morning I deleted my entire email sequence and started over.
+
+One simple change doubled my open rates..."
+
+EXAMPLE 2:
+"Last night I was reviewing my sales calls from the past month.
+
+Same objection every time: 'I need to think about it.'
+
+At 1am I realized something.
+
+They weren't saying 'I need to think about it.'
+
+They were saying 'I don't trust you yet.'
+
+Changed my entire approach. Now I'm closing 60% instead of 20%."
+`,
+  },
+  conversation: {
+    name: "The Overheard Conversation",
+    examples: `
+EXAMPLE 1:
 "Last Tuesday I was in line at Starbucks when I overheard two moms talking.
 
 One was almost in tears.
 
 She'd spent $3,000 on Facebook ads for her online course. Got 47 clicks. Zero sales.
 
-I wanted to interrupt and tell her what she was missing. But I didn't. Instead, I'm telling you."
+The other one goes: 'Did you email your list?'
 
-PATTERN INTERRUPT:
-"You know that feeling when you open your email list dashboard?
+'I don't have a list. Nobody tells you how to build one that actually works.'
 
-And you see the unsubscribe count going up?
+I wanted to interrupt and tell her. But I didn't.
 
-Yeah. That's not your fault.
+Instead, I'm telling you..."
 
-Well, it kind of is. But not in the way you think."
+EXAMPLE 2:
+"I was at a coffee shop last week working on my laptop.
 
-CONFESSION STYLE:
-"I'm gonna be honest with you.
+Two guys next to me were talking about their startup.
 
-I used to write emails that sounded like a robot having a panic attack.
+One says: 'We need to go viral.'
 
-'Leverage your synergies!' 'Transform your business!'
+The other one: 'Or we could just email the 50 people who actually asked for updates.'
 
-My subscribers hated me. I had a 2% open rate.
+First guy: 'That's not scalable.'
 
-Then I learned one thing that changed everything."
+Dude. You have zero revenue. Email the 50 people.
 
-UNCOMFORTABLE TRUTH:
-"Your email list doesn't hate you.
+This is the problem with everyone..."
+`,
+  },
+  surprise: {
+    name: "AI Surprise Mode",
+    examples: `
+MIX IT UP. Choose your own story structure based on what fits best.
 
-They just forgot you exist.
+Could be:
+- A confession ("I'm gonna be honest with you...")
+- A pattern interrupt ("You know that feeling when...")  
+- A personal story (specific moment, real details)
+- An uncomfortable truth ("Nobody wants to hear this but...")
+- A late-night realization ("It was 2am and...")
+- An overheard conversation ("I was at X when I heard...")
 
-Because every email you send sounds exactly like everyone else's.
+Just make it REAL. Make it SPECIFIC. Make them FEEL something.
 
-Same structure. Same promises. Same boring hooks.
+Start with a hook that drops them into a moment they recognize.
+`,
+  },
+};
 
-Let me show you what actually works."
+function getStoryExamples(structure?: string): string {
+  const selected = structure || 'surprise';
+  const storyData = STORY_STRUCTURES[selected as keyof typeof STORY_STRUCTURES] || STORY_STRUCTURES.surprise;
+  
+  return `
+YOU'RE USING: "${storyData.name}" STRUCTURE
 
-LATE-NIGHT REALIZATION:
-"It was 2am and I couldn't sleep.
-
-I was scrolling through my sent emails from the past year.
-
-And I realized something that made my stomach drop.
-
-I was writing to impress other marketers. Not to connect with real people.
-
-Everything changed when I stopped."
+${storyData.examples}
 
 ---
 
-WRITE LIKE THESE EXAMPLES. Match this tone. This rhythm. This realness.
+MATCH THIS ENERGY. This tone. This rhythm. This realness.
 `;
+}
 
 const CREATIVE_DIRECTION = `
 YOUR MISSION: Make them FEEL something.
@@ -234,7 +377,7 @@ Price: $${settings.price}
 EMOTIONAL STATE TO TAP:
 ${settings.primaryEmotion}
 
-${EXAMPLE_OPENINGS}
+${getStoryExamples(settings.storyStructure)}
 
 ${CREATIVE_DIRECTION}
 
