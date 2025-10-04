@@ -13,6 +13,7 @@ import { CritiquePanel } from "@/components/CritiquePanel";
 import { ParagraphPreviewDialog } from "@/components/ParagraphPreviewDialog";
 import { ReaderFocusDisplay } from "@/components/ReaderFocusDisplay";
 import { FrameworkDisplay } from "@/components/FrameworkDisplay";
+import { EmailFeedback } from "@/components/EmailFeedback";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { hasPostScript, buildPostScriptPrompt } from "@/lib/postscript";
@@ -74,6 +75,7 @@ export default function EmailView() {
   const [frameworkInfo, setFrameworkInfo] = useState<{ id: string; name: string } | null>(null);
   const [blandnessResult, setBlandnessResult] = useState<BlandnessResult | null>(null);
   const [isHumanizing, setIsHumanizing] = useState(false);
+  const [emailFeeling, setEmailFeeling] = useState<string>("");
 
   useEffect(() => {
     loadEmail();
@@ -537,6 +539,16 @@ ${email.ctas[selectedCta]}`;
           <p className="text-muted-foreground">
             Campaign: {campaign?.name} — Email {email.sequence_position}
           </p>
+        </div>
+
+        {/* Email Feedback - Right after title */}
+        <div className="mb-8">
+          <EmailFeedback
+            onFeedbackSelected={setEmailFeeling}
+            onHumanize={handleHumanize}
+            isHumanizing={isHumanizing}
+            blandPhrasesFound={blandnessResult?.foundPhrases}
+          />
         </div>
 
         {/* Subject Lines */}
