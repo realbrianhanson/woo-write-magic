@@ -75,8 +75,10 @@ PROOF MODALITIES - Combine claims with proof:
 CONVERSATIONAL FLOW:
 - Vary sentence length (short, long, short for rhythm)
 - Use triplets (3 sentences building momentum)
-- Sprinkle in conversational phrases: "Here's the thing...", "Check this out...", "You know what?"
+- Sprinkle in genuine conversational phrases: "Look...", "I mean...", "Yeah, but...", "Um..."
 - Add transitions: "Plus...", "And...", "But here's the kicker..."
+- Break perfect structure with one-liners that surprise
+- Sound human, not polished - embrace imperfection
 
 ELIMINATE RUTHLESSLY:
 - NO redundancy or repetition
@@ -107,7 +109,14 @@ ${BANNED_WORDS.join(", ")}
 
 Also AVOID these weak qualifiers: very, extremely, really, probably, maybe, kind of, almost, clearly, truly, simply, literally, actually, definitely, absolutely, completely, totally, utterly, quite, rather, somewhat, fairly, pretty
 
-Write like a REAL HUMAN FRIEND. Casual. Direct. Powerful.
+KILL THE AI RED FLAGS:
+❌ NO em dashes (—) - Use periods. Commas. Short sentences instead.
+❌ NO clichés - "full-service marketing dream team" → "We're the sidekick you didn't know you needed"
+❌ NO buzzwords - magical, transformative, synergy, revolutionary, game-changing, innovative, cutting-edge, seamless, robust, leverage, optimize, empower, holistic, dynamic, strategic
+❌ NO perfect structure - Add one-liner surprises. Break patterns.
+❌ NO robot polish - Keep some "um," "yeah," "but..." "I mean..." "look..." to sound genuine
+
+Write like a REAL HUMAN FRIEND. Casual. Direct. Powerful. Imperfect.
 `;
 
 export function buildEmailPrompt(
