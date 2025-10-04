@@ -13,6 +13,7 @@ interface CampaignSettings {
   useUniqueMechanism?: boolean;
   storyStructure?: string;
   competitorCopy?: string;
+  audienceReviews?: string;
 }
 
 const STORY_STRUCTURES = {
@@ -393,6 +394,27 @@ Instead:
 - If they lead with features, lead with story
 - Find what makes YOUR voice different
 - Stand out from their approach
+` : ''}
+
+${settings.audienceReviews ? `
+AUDIENCE VOICE & FEEDBACK:
+Below are real customer reviews and feedback about competitor products. Use their exact language, pain points, and desires:
+
+${settings.audienceReviews}
+
+CRITICAL INSTRUCTIONS:
+- MIRROR their language and phrases in your copy
+- Address the EXACT pain points they mention
+- Use their words, not marketing jargon
+- Reference specific frustrations they called out
+- Tap into the emotions behind their complaints
+- Position your product as solving what they dislike
+- Amplify what they wish existed
+
+Example: If they say "I was spending 3 hours every morning just trying to figure out..." 
+→ You write: "You know that feeling. 3 hours every morning. Just trying to figure out..."
+
+STEAL THEIR WORDS. Make them feel heard.
 ` : ''}
 
 ${CREATIVE_DIRECTION}
