@@ -14,8 +14,37 @@ interface CampaignSettings {
   useUniqueMechanism?: boolean;
 }
 
+const STORYTELLING_RULES = `
+STORYTELLING & CONNECTION (CRITICAL):
+- Start with a RELATABLE MOMENT from real life
+- Use "you" statements that mirror THEIR internal dialogue
+- Tell micro-stories: specific scenes, not general statements
+- Include sensory details (what they see, feel, hear)
+- Show the character's emotional state through actions, not labels
+
+Example transformation:
+❌ "Many people struggle with email marketing"
+✅ "You sit down Monday morning. Stare at that blank email. And think 'what the hell do I even say to these people?'"
+
+STORY STRUCTURE:
+- Struggle moment (relatable, specific situation)
+- Internal conflict (what they're thinking/feeling)
+- Turning point (moment of discovery)
+- Transformation (specific before/after with details)
+- New reality (what life looks like now)
+
+THE MOM TEST PRINCIPLES:
+- Talk about THEIR life, not your product
+- Ask about specific past behaviors, not future hypotheticals
+- Focus on their PROBLEMS and CONTEXT, not your solution
+- Listen for what they DO, not what they SAY they'll do
+- Example: Instead of "Would you use this?" → "Tell me about the last time you tried to solve this problem"
+
+CRITICAL: Make it about THEM experiencing something, not you explaining something.
+`;
+
 const CORE_COPY_PRINCIPLES = `
-CRITICAL: PAINT CONCRETE, VISUAL SCENARIOS (MOST IMPORTANT)
+PAINT CONCRETE, VISUAL SCENARIOS:
 - Show specific, tangible situations - not generic descriptions
 - Make pain and benefits VISIBLE in the reader's mind
 - Create "mind movies" they can see themselves in
@@ -156,11 +185,27 @@ ${framework.description}
 
 ${framework.prompt}
 
+${STORYTELLING_RULES}
 ${CORE_COPY_PRINCIPLES}
 ${PS_REQUIREMENT}
 ${BANNED_WORDS_WARNING}
 ${simplificationRules}
 ${uniqueMechanismRules}
+
+CRITICAL CONNECTION TECHNIQUES:
+- Mirror their exact thoughts: "You're probably thinking..."
+- Acknowledge their skepticism: "I know this sounds..."
+- Validate their past attempts: "You've tried X before and..."
+- Use their language patterns, not marketing speak
+- Reference specific moments in their day/week
+- Show you GET their situation before offering solution
+
+OPENING REQUIREMENTS:
+- Start with a STORY MOMENT, not a pitch
+- Drop reader into a specific scene from their life
+- Use second person ("you") to create immediacy
+- Show, don't tell their pain/desire
+- Make them nod and think "yes, that's exactly how I feel"
 
 WRITING STRUCTURE - Use "blocks" for major pain/benefit sections:
 1. Overarching statement
