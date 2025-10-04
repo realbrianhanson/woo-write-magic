@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Copy, Save, RefreshCw, AlertCircle } from "lucide-react";
+import { ArrowLeft, Copy, Save, RefreshCw, AlertCircle, FileSearch } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EmailMetrics } from "@/components/EmailMetrics";
 import { UniqueMechanismDisplay } from "@/components/UniqueMechanismDisplay";
+import { CritiquePanel } from "@/components/CritiquePanel";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { hasPostScript, buildPostScriptPrompt } from "@/lib/postscript";
@@ -17,6 +18,7 @@ import {
   findSentencesWithBannedWords, 
   buildBannedWordReplacementPrompt 
 } from "@/lib/bannedWords";
+import { critiqueEmail, buildCritiqueFixPrompt, type CritiqueResult } from "@/lib/critique";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -43,6 +45,9 @@ export default function EmailView() {
   const [showPSWarning, setShowPSWarning] = useState(false);
   const [bannedWordsFound, setBannedWordsFound] = useState<string[]>([]);
   const [isReplacingBannedWords, setIsReplacingBannedWords] = useState(false);
+  const [critiqueResult, setCritiqueResult] = useState<CritiqueResult | null>(null);
+  const [showCritique, setShowCritique] = useState(false);
+  const [isApplyingFixes, setIsApplyingFixes] = useState(false);
 
   useEffect(() => {
     loadEmail();
@@ -292,6 +297,48 @@ ${email.ctas[selectedCta]}`;
     }
   };
 
+  const handleCritique = () => {
+    const result = critiqueEmail(emailBody);
+    setCritiqueResult(result);
+    setShowCritique(true);
+  };
+
+  const handleApplyCritiqueFixes = async () => {
+    if (!critiqueResult || critiqueResult.issues.length === 0) return;
+    
+    setIsApplyingFixes(true);
+    try {
+      const prompt = buildCritiqueFixPrompt(emailBody, critiqueResult.issues);
+
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
+        "generate-email",
+        { body: { prompt } }
+      );
+
+      if (aiError) throw aiError;
+
+      const fixedEmail = aiResponse.generatedText.trim();
+      setEmailBody(fixedEmail);
+      
+      // Re-analyze after fixes
+      const newResult = critiqueEmail(fixedEmail);
+      setCritiqueResult(newResult);
+
+      toast({
+        title: "Fixes applied!",
+        description: `Score improved from ${critiqueResult.score} to ${newResult.score}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to apply fixes",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplyingFixes(false);
+    }
+  };
+
   if (!email) return null;
 
   return (
@@ -412,10 +459,31 @@ ${email.ctas[selectedCta]}`;
         </div>
 
         {/* Readability Metrics */}
-        {metrics && (
+        {metrics && !showCritique && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Readability Analysis</h2>
             <EmailMetrics metrics={metrics} />
+          </div>
+        )}
+
+        {/* Critique Panel */}
+        {showCritique && critiqueResult && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Email Critique</h2>
+              <Button
+                onClick={() => setShowCritique(false)}
+                variant="ghost"
+                size="sm"
+              >
+                Hide Critique
+              </Button>
+            </div>
+            <CritiquePanel
+              result={critiqueResult}
+              onApplyFixes={handleApplyCritiqueFixes}
+              isApplyingFixes={isApplyingFixes}
+            />
           </div>
         )}
 
@@ -476,6 +544,10 @@ ${email.ctas[selectedCta]}`;
 
         {/* Actions */}
         <div className="flex flex-wrap gap-3">
+          <Button onClick={handleCritique} variant="outline">
+            <FileSearch className="mr-2 h-4 w-4" />
+            {showCritique ? "Update Critique" : "Critique This"}
+          </Button>
           <Button onClick={handleCopy} variant="outline">
             <Copy className="mr-2 h-4 w-4" />
             Copy Email
