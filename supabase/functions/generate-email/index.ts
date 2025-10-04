@@ -48,7 +48,15 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
-    const generatedText = data.choices[0].message.content;
+    let generatedText = data.choices[0].message.content;
+
+    // Strip markdown code fences if present
+    generatedText = generatedText.trim();
+    if (generatedText.startsWith("```json")) {
+      generatedText = generatedText.replace(/^```json\n/, "").replace(/\n```$/, "");
+    } else if (generatedText.startsWith("```")) {
+      generatedText = generatedText.replace(/^```\n/, "").replace(/\n```$/, "");
+    }
 
     return new Response(JSON.stringify({ generatedText }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
