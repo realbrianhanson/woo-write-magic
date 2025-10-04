@@ -1,5 +1,4 @@
 import { BANNED_WORDS } from "./bannedWords";
-import { selectBestFramework } from "./frameworks";
 
 interface CampaignSettings {
   productName: string;
@@ -14,109 +13,157 @@ interface CampaignSettings {
   useUniqueMechanism?: boolean;
 }
 
-const STORYTELLING_RULES = `
-STORYTELLING & CONNECTION (CRITICAL):
-- Start with a RELATABLE MOMENT from real life
-- Use "you" statements that mirror THEIR internal dialogue
-- Tell micro-stories: specific scenes, not general statements
-- Include sensory details (what they see, feel, hear)
-- Show the character's emotional state through actions, not labels
+const EXAMPLE_OPENINGS = `
+HERE ARE EXAMPLES OF HOW TO START. Study these. Match this energy.
 
-Example transformation:
-❌ "Many people struggle with email marketing"
-✅ "You sit down Monday morning. Stare at that blank email. And think 'what the hell do I even say to these people?'"
+PERSONAL STORY START:
+"Last Tuesday I was in line at Starbucks when I overheard two moms talking.
 
-STORY STRUCTURE:
-- Struggle moment (relatable, specific situation)
-- Internal conflict (what they're thinking/feeling)
-- Turning point (moment of discovery)
-- Transformation (specific before/after with details)
-- New reality (what life looks like now)
+One was almost in tears.
 
-THE MOM TEST PRINCIPLES:
-- Talk about THEIR life, not your product
-- Ask about specific past behaviors, not future hypotheticals
-- Focus on their PROBLEMS and CONTEXT, not your solution
-- Listen for what they DO, not what they SAY they'll do
-- Example: Instead of "Would you use this?" → "Tell me about the last time you tried to solve this problem"
+She'd spent $3,000 on Facebook ads for her online course. Got 47 clicks. Zero sales.
 
-CRITICAL: Make it about THEM experiencing something, not you explaining something.
+I wanted to interrupt and tell her what she was missing. But I didn't. Instead, I'm telling you."
+
+PATTERN INTERRUPT:
+"You know that feeling when you open your email list dashboard?
+
+And you see the unsubscribe count going up?
+
+Yeah. That's not your fault.
+
+Well, it kind of is. But not in the way you think."
+
+CONFESSION STYLE:
+"I'm gonna be honest with you.
+
+I used to write emails that sounded like a robot having a panic attack.
+
+'Leverage your synergies!' 'Transform your business!'
+
+My subscribers hated me. I had a 2% open rate.
+
+Then I learned one thing that changed everything."
+
+UNCOMFORTABLE TRUTH:
+"Your email list doesn't hate you.
+
+They just forgot you exist.
+
+Because every email you send sounds exactly like everyone else's.
+
+Same structure. Same promises. Same boring hooks.
+
+Let me show you what actually works."
+
+LATE-NIGHT REALIZATION:
+"It was 2am and I couldn't sleep.
+
+I was scrolling through my sent emails from the past year.
+
+And I realized something that made my stomach drop.
+
+I was writing to impress other marketers. Not to connect with real people.
+
+Everything changed when I stopped."
+
+---
+
+WRITE LIKE THESE EXAMPLES. Match this tone. This rhythm. This realness.
 `;
 
-const CORE_COPY_PRINCIPLES = `
-PAINT CONCRETE, VISUAL SCENARIOS:
-- Show specific, tangible situations - not generic descriptions
-- Make pain and benefits VISIBLE in the reader's mind
-- Create "mind movies" they can see themselves in
-- Example: Instead of "improve your productivity" → "watch yourself close your laptop at 3pm, knowing you've finished everything"
+const CREATIVE_DIRECTION = `
+YOUR MISSION: Make them FEEL something.
 
-SOCIAL PROOF & STATUS:
-- Show how benefits affect how OTHERS perceive them
-- Include social situations and reactions from people around them
-- Example: "Your colleagues will ask if you hired a personal trainer"
+Write like a human. Not a marketer. Not a copywriter. A human.
 
-LANGUAGE STYLE:
-- Write like a FRIEND talking to a friend - casual, conversational
-- Use powerful, visceral ACTIVE VERBS (not passive voice)
-- Short, rhythmic sentences with varied length for flow
-- Use Anglo-Saxon words over Latin ones (small vs. diminutive)
-- Target 6th grade reading level
-- Maximum 15-20 words per sentence
-- ELIMINATE all qualifiers (very, extremely, really, probably)
-- AVOID adverbs ending in -ly
-- Use PROGRESSIVE TENSE for benefits ("is transforming" not "will transform")
+Sound like you're texting a friend at midnight when you had a breakthrough.
 
-PROOF MODALITIES - Combine claims with proof:
-- Specificity: Use exact numbers, names, percentages ("347 customers", "Harvard scientists")
-- Testable proof: Facts readers can verify themselves
-- Metaphors: Simple comparisons that create instant understanding
-- Technical credibility: Brief expert language that builds authority
+DROP THE READER INTO A MOMENT:
+- A specific Tuesday afternoon
+- Standing in their kitchen at 6am
+- That feeling when they check their bank account
+- The conversation they had yesterday that they can't stop thinking about
 
-CONVERSATIONAL FLOW:
-- Vary sentence length (short, long, short for rhythm)
-- Use triplets (3 sentences building momentum)
-- Sprinkle in genuine conversational phrases: "Look...", "I mean...", "Yeah, but...", "Um..."
-- Add transitions: "Plus...", "And...", "But here's the kicker..."
-- Break perfect structure with one-liners that surprise
-- Sound human, not polished - embrace imperfection
+PAINT PICTURES THEY CAN SEE:
+❌ "You'll be more productive"
+✅ "You'll close your laptop at 3pm. Still have dinner with your kids. And not think about work until Monday."
 
-ELIMINATE RUTHLESSLY:
-- NO redundancy or repetition
-- NO unnecessary words
-- NO vague language or unclear pronouns
-- NO complex jargon unless building credibility
-- Every sentence must be essential
-`;
+❌ "Our solution helps struggling entrepreneurs"
+✅ "You're staring at your screen. It's 11pm. You have 3 tabs open trying to figure out why nobody's buying."
 
-const PS_REQUIREMENT = `
-CRITICAL: ALWAYS END WITH P.S. SECTION
-Every email MUST end with a P.S. that:
-- Restates the main benefit in a fresh way
-- Adds urgency or mentions a bonus/deadline
-- Repeats the call-to-action
+MAKE IT ABOUT THEIR LIFE, NOT YOUR PRODUCT:
+- Talk about what they DO, not what they SAY
+- Reference the specific moments in their day/week
+- Mirror their exact internal dialogue
+- Show you've lived their struggle
 
-Format: 
-P.S. [benefit reminder + urgency element + clear CTA]
+USE REAL HUMAN LANGUAGE:
+- "Look..."
+- "Here's the thing..."
+- "I mean..."
+- "Yeah, but..."
+- Sentence fragments. Because that's how people talk.
+- One-liners that surprise them
 
-Example:
-"P.S. Remember, this framework helped 347 course creators add $10K/month to their revenue. But early access closes in 48 hours. Click here to claim your spot before it's gone."
-`;
+AVOID LIKE POISON:
+- Em dashes (—) → Use periods. Short sentences.
+- Buzzwords: magical, transformative, synergy, revolutionary, game-changing, seamless
+- Perfect structure → Break it. Add surprises.
+- Clichés → "We're not your typical agency" (cringe)
+- Marketing speak → Nobody talks like this in real life
 
-const BANNED_WORDS_WARNING = `
-CRITICAL: AVOID AI-SOUNDING WORDS
-Do NOT use these words - they sound robotic and AI-generated:
+THE BANNED WORD LIST (sounds like AI):
 ${BANNED_WORDS.join(", ")}
 
-Also AVOID these weak qualifiers: very, extremely, really, probably, maybe, kind of, almost, clearly, truly, simply, literally, actually, definitely, absolutely, completely, totally, utterly, quite, rather, somewhat, fairly, pretty
+Also banned: very, extremely, really, probably, maybe, kind of, almost, clearly, truly, simply, literally, actually, definitely, absolutely, completely, totally, utterly, quite, rather, somewhat, fairly, pretty
 
-KILL THE AI RED FLAGS:
-❌ NO em dashes (—) - Use periods. Commas. Short sentences instead.
-❌ NO clichés - "full-service marketing dream team" → "We're the sidekick you didn't know you needed"
-❌ NO buzzwords - magical, transformative, synergy, revolutionary, game-changing, innovative, cutting-edge, seamless, robust, leverage, optimize, empower, holistic, dynamic, strategic
-❌ NO perfect structure - Add one-liner surprises. Break patterns.
-❌ NO robot polish - Keep some "um," "yeah," "but..." "I mean..." "look..." to sound genuine
+PROOF THAT FEELS REAL:
+Don't say "347 customers achieved results"
+Say "Sarah was making $4K a month. Now she's at $15K. Took her 6 weeks."
 
-Write like a REAL HUMAN FRIEND. Casual. Direct. Powerful. Imperfect.
+Use:
+- Specific names and numbers
+- Before/after with details they can picture
+- Stuff they can verify themselves
+- "You know those ads you see everywhere? Yeah, those don't work."
+
+SOCIAL IMPACT (show how others will see them):
+Not: "You'll be successful"
+But: "Your team will ask how you got so much done. Your spouse will notice you're not stressed anymore. People will think you hired help."
+
+READING LEVEL: 6th grade maximum
+- Short words (Anglo-Saxon, not Latin)
+- 15 words per sentence max
+- No jargon unless building credibility
+- Break long thoughts into tiny sentences
+
+RHYTHM & FLOW:
+Short sentence.
+Then a longer one that builds on the idea and keeps them reading.
+Back to short.
+
+Use triplets (three sentences that build):
+"You're tired of this.
+You've tried everything.
+Nothing's worked."
+
+ALWAYS END WITH P.S.:
+Make it about the benefit + urgency + action
+
+"P.S. Sarah went from $4K to $15K in 6 weeks using this. But the early access deal ends Friday. Click here before it's gone."
+
+STRUCTURE (but hide it, make it feel natural):
+1. Hook with a story moment (use the examples above)
+2. Make it about THEIR situation, not your product
+3. Show the pain (specific, visual, emotional)
+4. Tease the solution (don't reveal everything)
+5. Social proof that feels real
+6. Clear action step
+7. P.S. with urgency
+
+NO ONE SHOULD RECOGNIZE THIS AS MARKETING.
+It should feel like a friend sharing something that changed their life.
 `;
 
 export function buildEmailPrompt(
@@ -125,138 +172,96 @@ export function buildEmailPrompt(
   totalEmails: number = 1,
   simplify: boolean = false
 ): string {
-const simplificationRules = simplify
+  const simplificationRules = simplify
     ? `
-EXTRA SIMPLIFICATION REQUIRED:
-- Target 4th grade reading level
-- Maximum 12 words per sentence
-- Maximum 2 sentences per paragraph
-- Replace ALL complex words with simple alternatives
-- Cut every unnecessary word
-- Break long sentences into short ones
-- Use the simplest word that works
+MAKE IT EVEN SIMPLER:
+- 4th grade reading level
+- 12 words per sentence max
+- 2 sentences per paragraph max
+- Replace every complex word with the simplest version
+- Cut everything that isn't essential
 `
     : '';
 
   const uniqueMechanismRules = settings.useUniqueMechanism
     ? `
-UNIQUE MECHANISM REQUIREMENT:
-You MUST create a compelling unique mechanism that positions this solution as different:
+CREATE A UNIQUE MECHANISM (but make it feel natural, not forced):
 
-1. IDENTIFY ROOT CAUSE:
-   - Find a surprising or counterintuitive root cause of their pain
-   - Something they haven't heard before
-   - Make it feel like "the missing 1% they've been overlooking"
+Give it a name people remember:
+- "The 3-Minute Reset"
+- "The Tuesday Method"
+- "The Reverse Launch"
 
-2. CREATE CATCHY NICKNAME:
-   - Give the mechanism a memorable name (e.g., "The 3-Minute Morning Reset", "The Revenue Reversal Method")
-   - Make it sound proprietary and exclusive
-   - Use numbers, metaphors, or power words
+Find the surprising root cause:
+- Something counterintuitive
+- The 1% they've been missing
+- "You think it's X, but it's actually Y"
 
-3. EXPLAIN WITH METAPHOR:
-   - Use a simple, relatable metaphor to explain how it works
-   - Make the complex feel simple
-   - Create an "aha!" moment
+Explain with a simple metaphor:
+- Make the complex feel obvious
+- Create an "oh shit" moment
+- Use everyday comparisons
 
-4. INTEGRATE INTO EMAIL:
-   - Position the unique mechanism as the core differentiator
-   - Build intrigue around it
-   - Make readers curious to learn more
+Weave it into the email naturally. Don't announce it like a product feature.
 
-IMPORTANT: Return the mechanism details in the metadata for display.
+Return this in the JSON:
+"uniqueMechanism": {
+  "nickname": "The catchy name",
+  "rootCause": "Why their current approach isn't working",
+  "metaphor": "Simple explanation"
+}
 `
     : '';
 
-  // Select best framework based on campaign type and emotion
-  const framework = selectBestFramework(
-    settings.campaignType,
-    settings.primaryEmotion
-  );
+  return `You're writing a high-converting email. Not as a copywriter. As a human who figured something out and wants to share it.
 
-  return `You are a master direct response copywriter specializing in high-converting email campaigns.
+CAMPAIGN CONTEXT:
+Email ${emailNumber} of ${totalEmails} - ${settings.campaignType}
 
-CAMPAIGN TYPE: ${settings.campaignType}
-EMAIL: ${emailNumber} of ${totalEmails}
+WHO YOU'RE TALKING TO:
+${settings.audience}
 
-PRODUCT DETAILS:
-- Product: ${settings.productName}
-- Description: ${settings.description}
-- Price: $${settings.price}
+THEIR PAIN:
+${settings.painPoint}
 
-AUDIENCE & PSYCHOLOGY:
-- Target Audience: ${settings.audience}
-- Pain Point: ${settings.painPoint}
-- Desired Transformation: ${settings.desiredResult}
-- Primary Emotion: ${settings.primaryEmotion}
+WHAT THEY WANT:
+${settings.desiredResult}
 
-COPYWRITING FRAMEWORK: ${framework.acronym} (${framework.name})
-${framework.description}
+THE PRODUCT:
+${settings.productName} - ${settings.description}
+Price: $${settings.price}
 
-${framework.prompt}
+EMOTIONAL STATE TO TAP:
+${settings.primaryEmotion}
 
-${STORYTELLING_RULES}
-${CORE_COPY_PRINCIPLES}
-${PS_REQUIREMENT}
-${BANNED_WORDS_WARNING}
+${EXAMPLE_OPENINGS}
+
+${CREATIVE_DIRECTION}
+
 ${simplificationRules}
+
 ${uniqueMechanismRules}
 
-CRITICAL CONNECTION TECHNIQUES:
-- Mirror their exact thoughts: "You're probably thinking..."
-- Acknowledge their skepticism: "I know this sounds..."
-- Validate their past attempts: "You've tried X before and..."
-- Use their language patterns, not marketing speak
-- Reference specific moments in their day/week
-- Show you GET their situation before offering solution
-
-OPENING REQUIREMENTS:
-- Start with a STORY MOMENT, not a pitch
-- Drop reader into a specific scene from their life
-- Use second person ("you") to create immediacy
-- Show, don't tell their pain/desire
-- Make them nod and think "yes, that's exactly how I feel"
-
-WRITING STRUCTURE - Use "blocks" for major pain/benefit sections:
-1. Overarching statement
-2. 3 specific, concrete examples with vivid details
-3. 1-2 dimensional "lived experience" scenarios (create mind movies)
-4. Deep emotional recap of how it makes them feel
-
-Example block:
-"You'll have your evenings back. [overarching]
-
-No more staying late finishing reports.
-No more missing dinner with your family.
-No more working weekends to catch up. [3 specifics]
-
-Picture this: You close your laptop at 5pm. Walk to your car. And actually enjoy your Friday night instead of thinking about Monday's deadlines. [mind movie]
-
-You'll finally feel like you're living your life, not just surviving it." [emotional recap]
-
-OUTPUT REQUIREMENTS:
-Return ONLY valid JSON in this exact format:
+OUTPUT FORMAT (this is the only technical part):
+Return valid JSON only:
 {
   "subjectLines": [
-    "Subject line option 1",
-    "Subject line option 2",
-    "Subject line option 3"
+    "Subject 1 (casual, curiosity-driven, no clickbait)",
+    "Subject 2 (pattern interrupt or question)",
+    "Subject 3 (personal or confession style)"
   ],
-  "emailBody": "Full email text with [First Name] personalization tag where appropriate. Use \\n\\n for paragraph breaks.",
+  "emailBody": "Full email text. Use [First Name] for personalization. Use \\n\\n for paragraph breaks. Sound human. Make them feel something.",
   "ctas": [
-    "CTA option 1",
-    "CTA option 2", 
-    "CTA option 3"
+    "CTA 1 (conversational, low-pressure)",
+    "CTA 2 (benefit-focused, specific)",
+    "CTA 3 (urgency without desperation)"
   ]${settings.useUniqueMechanism ? `,
   "uniqueMechanism": {
-    "nickname": "The catchy name for the mechanism",
-    "rootCause": "The surprising root cause explanation",
-    "metaphor": "The simple metaphor used to explain it"
-  }` : ''},
-  "framework": {
-    "id": "${framework.id}",
-    "name": "${framework.name}"
-  }
+    "nickname": "The name",
+    "rootCause": "Why it works",
+    "metaphor": "How to explain it"
+  }` : ''}
 }
 
-Remember: Follow the ${framework.acronym} framework structure. Simple words. Short sentences. Maximum impact.`;
+Remember: Write like a human. Sound like a text message. Make them feel something. No one should recognize this as marketing.`;
 }
