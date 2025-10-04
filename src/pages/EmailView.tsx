@@ -11,6 +11,9 @@ import { EmailMetrics } from "@/components/EmailMetrics";
 import { UniqueMechanismDisplay } from "@/components/UniqueMechanismDisplay";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
+import { hasPostScript, buildPostScriptPrompt } from "@/lib/postscript";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface UniqueMechanism {
   nickname: string;
@@ -31,6 +34,8 @@ export default function EmailView() {
   const [uniqueMechanism, setUniqueMechanism] = useState<UniqueMechanism | null>(null);
   const [isSimplifying, setIsSimplifying] = useState(false);
   const [isRegeneratingMechanism, setIsRegeneratingMechanism] = useState(false);
+  const [isAddingPS, setIsAddingPS] = useState(false);
+  const [showPSWarning, setShowPSWarning] = useState(false);
 
   useEffect(() => {
     loadEmail();
@@ -39,6 +44,7 @@ export default function EmailView() {
   useEffect(() => {
     if (emailBody) {
       setMetrics(analyzeReadability(emailBody));
+      setShowPSWarning(!hasPostScript(emailBody));
     }
   }, [emailBody]);
 
@@ -185,6 +191,45 @@ ${email.ctas[selectedCta]}`;
     }
   };
 
+  const handleAddPS = async () => {
+    setIsAddingPS(true);
+    try {
+      const prompt = buildPostScriptPrompt(
+        emailBody,
+        campaign.settings.productName || campaign.name,
+        campaign.settings.desiredResult || "transformation",
+        email.ctas?.[selectedCta] || "Click here"
+      );
+
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
+        "generate-email",
+        { body: { prompt } }
+      );
+
+      if (aiError) throw aiError;
+
+      const psText = aiResponse.generatedText.trim();
+      
+      // Append P.S. to email body
+      const updatedBody = emailBody + "\n\n" + psText;
+      setEmailBody(updatedBody);
+      setShowPSWarning(false);
+
+      toast({
+        title: "P.S. added!",
+        description: "Strategic P.S. section appended to your email.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to add P.S.",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingPS(false);
+    }
+  };
+
   if (!email) return null;
 
   return (
@@ -235,7 +280,36 @@ ${email.ctas[selectedCta]}`;
 
         {/* Email Body */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Email Body</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Email Body</h2>
+            {showPSWarning && (
+              <Button
+                onClick={handleAddPS}
+                variant="outline"
+                size="sm"
+                disabled={isAddingPS}
+              >
+                {isAddingPS ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Adding P.S...
+                  </>
+                ) : (
+                  "Add P.S."
+                )}
+              </Button>
+            )}
+          </div>
+          
+          {showPSWarning && (
+            <Alert className="mb-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+                Missing P.S. section - this is critical for conversions. Click "Add P.S." to append one.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <Textarea
             value={emailBody}
             onChange={(e) => setEmailBody(e.target.value)}

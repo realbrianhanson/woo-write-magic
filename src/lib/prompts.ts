@@ -23,6 +23,20 @@ CRITICAL READABILITY REQUIREMENTS:
 - One idea per sentence
 `;
 
+const PS_REQUIREMENT = `
+CRITICAL: ALWAYS END WITH P.S. SECTION
+Every email MUST end with a P.S. that:
+- Restates the main benefit in a fresh way
+- Adds urgency or mentions a bonus/deadline
+- Repeats the call-to-action
+
+Format: 
+P.S. [benefit reminder + urgency element + clear CTA]
+
+Example:
+"P.S. Remember, this framework helped 347 course creators add $10K/month to their revenue. But early access closes in 48 hours. Click here to claim your spot before it's gone."
+`;
+
 export function buildEmailPrompt(
   settings: CampaignSettings,
   emailNumber: number = 1,
@@ -86,6 +100,7 @@ AUDIENCE & PSYCHOLOGY:
 - Primary Emotion: ${settings.primaryEmotion}
 
 ${READABILITY_RULES}
+${PS_REQUIREMENT}
 ${simplificationRules}
 ${uniqueMechanismRules}
 
