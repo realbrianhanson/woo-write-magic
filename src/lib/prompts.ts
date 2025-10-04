@@ -14,16 +14,47 @@ interface CampaignSettings {
   useUniqueMechanism?: boolean;
 }
 
-const READABILITY_RULES = `
-CRITICAL READABILITY REQUIREMENTS:
-- Write at 6th grade reading level
-- Use short, simple words (avoid jargon and complex vocabulary)
-- Maximum 2-3 sentences per paragraph
-- Use short, punchy sentences for impact
-- Average sentence length should be 15-20 words maximum
-- Break up long thoughts into multiple short sentences
-- Use active voice, not passive
-- One idea per sentence
+const CORE_COPY_PRINCIPLES = `
+CRITICAL: PAINT CONCRETE, VISUAL SCENARIOS (MOST IMPORTANT)
+- Show specific, tangible situations - not generic descriptions
+- Make pain and benefits VISIBLE in the reader's mind
+- Create "mind movies" they can see themselves in
+- Example: Instead of "improve your productivity" → "watch yourself close your laptop at 3pm, knowing you've finished everything"
+
+SOCIAL PROOF & STATUS:
+- Show how benefits affect how OTHERS perceive them
+- Include social situations and reactions from people around them
+- Example: "Your colleagues will ask if you hired a personal trainer"
+
+LANGUAGE STYLE:
+- Write like a FRIEND talking to a friend - casual, conversational
+- Use powerful, visceral ACTIVE VERBS (not passive voice)
+- Short, rhythmic sentences with varied length for flow
+- Use Anglo-Saxon words over Latin ones (small vs. diminutive)
+- Target 6th grade reading level
+- Maximum 15-20 words per sentence
+- ELIMINATE all qualifiers (very, extremely, really, probably)
+- AVOID adverbs ending in -ly
+- Use PROGRESSIVE TENSE for benefits ("is transforming" not "will transform")
+
+PROOF MODALITIES - Combine claims with proof:
+- Specificity: Use exact numbers, names, percentages ("347 customers", "Harvard scientists")
+- Testable proof: Facts readers can verify themselves
+- Metaphors: Simple comparisons that create instant understanding
+- Technical credibility: Brief expert language that builds authority
+
+CONVERSATIONAL FLOW:
+- Vary sentence length (short, long, short for rhythm)
+- Use triplets (3 sentences building momentum)
+- Sprinkle in conversational phrases: "Here's the thing...", "Check this out...", "You know what?"
+- Add transitions: "Plus...", "And...", "But here's the kicker..."
+
+ELIMINATE RUTHLESSLY:
+- NO redundancy or repetition
+- NO unnecessary words
+- NO vague language or unclear pronouns
+- NO complex jargon unless building credibility
+- Every sentence must be essential
 `;
 
 const PS_REQUIREMENT = `
@@ -45,7 +76,9 @@ CRITICAL: AVOID AI-SOUNDING WORDS
 Do NOT use these words - they sound robotic and AI-generated:
 ${BANNED_WORDS.join(", ")}
 
-Write like a real human. Use conversational, natural language.
+Also AVOID these weak qualifiers: very, extremely, really, probably, maybe, kind of, almost, clearly, truly, simply, literally, actually, definitely, absolutely, completely, totally, utterly, quite, rather, somewhat, fairly, pretty
+
+Write like a REAL HUMAN FRIEND. Casual. Direct. Powerful.
 `;
 
 export function buildEmailPrompt(
@@ -54,14 +87,16 @@ export function buildEmailPrompt(
   totalEmails: number = 1,
   simplify: boolean = false
 ): string {
-  const simplificationRules = simplify
+const simplificationRules = simplify
     ? `
 EXTRA SIMPLIFICATION REQUIRED:
-- Target 4th-6th grade reading level
-- Maximum 15 words per sentence
+- Target 4th grade reading level
+- Maximum 12 words per sentence
 - Maximum 2 sentences per paragraph
 - Replace ALL complex words with simple alternatives
-- Cut any unnecessary words
+- Cut every unnecessary word
+- Break long sentences into short ones
+- Use the simplest word that works
 `
     : '';
 
@@ -121,11 +156,28 @@ ${framework.description}
 
 ${framework.prompt}
 
-${READABILITY_RULES}
+${CORE_COPY_PRINCIPLES}
 ${PS_REQUIREMENT}
 ${BANNED_WORDS_WARNING}
 ${simplificationRules}
 ${uniqueMechanismRules}
+
+WRITING STRUCTURE - Use "blocks" for major pain/benefit sections:
+1. Overarching statement
+2. 3 specific, concrete examples with vivid details
+3. 1-2 dimensional "lived experience" scenarios (create mind movies)
+4. Deep emotional recap of how it makes them feel
+
+Example block:
+"You'll have your evenings back. [overarching]
+
+No more staying late finishing reports.
+No more missing dinner with your family.
+No more working weekends to catch up. [3 specifics]
+
+Picture this: You close your laptop at 5pm. Walk to your car. And actually enjoy your Friday night instead of thinking about Monday's deadlines. [mind movie]
+
+You'll finally feel like you're living your life, not just surviving it." [emotional recap]
 
 OUTPUT REQUIREMENTS:
 Return ONLY valid JSON in this exact format:
