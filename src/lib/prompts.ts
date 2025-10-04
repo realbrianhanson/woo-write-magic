@@ -12,6 +12,7 @@ interface CampaignSettings {
   sequenceLength?: number;
   useUniqueMechanism?: boolean;
   storyStructure?: string;
+  competitorCopy?: string;
 }
 
 const STORY_STRUCTURES = {
@@ -378,6 +379,21 @@ EMOTIONAL STATE TO TAP:
 ${settings.primaryEmotion}
 
 ${getStoryExamples(settings.storyStructure)}
+
+${settings.competitorCopy ? `
+COMPETITOR COPY ANALYSIS:
+Below is competitor email copy. Analyze their patterns and avoid them:
+
+${settings.competitorCopy}
+
+CRITICAL: DO NOT copy their style, structure, or phrases.
+Instead:
+- If they're formal, be casual
+- If they use long paragraphs, use short ones
+- If they lead with features, lead with story
+- Find what makes YOUR voice different
+- Stand out from their approach
+` : ''}
 
 ${CREATIVE_DIRECTION}
 

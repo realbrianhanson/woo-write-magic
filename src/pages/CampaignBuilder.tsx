@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { analyzeReadability } from "@/lib/readability";
 import { calculateReaderFocus } from "@/lib/readerFocus";
+import { CompetitorCopyInput } from "@/components/CompetitorCopyInput";
 
 export default function CampaignBuilder() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function CampaignBuilder() {
     primaryEmotion: "Hope & Transformation",
     useUniqueMechanism: true,
     storyStructure: "surprise",
+    competitorCopy: "",
   });
 
   const handleSubmit = async (e: React.FormEvent, simplify: boolean = false) => {
@@ -68,6 +70,7 @@ export default function CampaignBuilder() {
           sequenceLength: parseInt(formData.sequenceLength),
           useUniqueMechanism: formData.useUniqueMechanism,
           storyStructure: formData.storyStructure,
+          competitorCopy: formData.competitorCopy,
         },
         1,
         parseInt(formData.sequenceLength),
@@ -315,6 +318,12 @@ export default function CampaignBuilder() {
               </div>
             </RadioGroup>
           </div>
+
+          {/* Competitor Copy Input */}
+          <CompetitorCopyInput
+            value={formData.competitorCopy}
+            onChange={(value) => setFormData({ ...formData, competitorCopy: value })}
+          />
 
           {/* Advanced Section */}
           <div className="space-y-4 bg-card p-6 rounded-lg border">
