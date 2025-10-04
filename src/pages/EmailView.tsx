@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Copy, Save, RefreshCw, AlertCircle, FileSearch } from "lucide-react";
+import { ArrowLeft, Copy, Save, RefreshCw, AlertCircle, FileSearch, AlignLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EmailMetrics } from "@/components/EmailMetrics";
 import { UniqueMechanismDisplay } from "@/components/UniqueMechanismDisplay";
 import { CritiquePanel } from "@/components/CritiquePanel";
+import { ParagraphPreviewDialog } from "@/components/ParagraphPreviewDialog";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { hasPostScript, buildPostScriptPrompt } from "@/lib/postscript";
@@ -19,6 +20,11 @@ import {
   buildBannedWordReplacementPrompt 
 } from "@/lib/bannedWords";
 import { critiqueEmail, buildCritiqueFixPrompt, type CritiqueResult } from "@/lib/critique";
+import {
+  findLongParagraphs,
+  buildParagraphFormattingPrompt,
+  applyFormattedParagraphs,
+} from "@/lib/paragraphFormatter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -48,6 +54,13 @@ export default function EmailView() {
   const [critiqueResult, setCritiqueResult] = useState<CritiqueResult | null>(null);
   const [showCritique, setShowCritique] = useState(false);
   const [isApplyingFixes, setIsApplyingFixes] = useState(false);
+  const [longParagraphCount, setLongParagraphCount] = useState(0);
+  const [isFormattingParagraphs, setIsFormattingParagraphs] = useState(false);
+  const [showParagraphPreview, setShowParagraphPreview] = useState(false);
+  const [paragraphComparisons, setParagraphComparisons] = useState<
+    Array<{ original: string; formatted: string; sentenceCount: number }>
+  >([]);
+  const [pendingFormattedText, setPendingFormattedText] = useState("");
 
   useEffect(() => {
     loadEmail();
@@ -58,6 +71,10 @@ export default function EmailView() {
       setMetrics(analyzeReadability(emailBody));
       setShowPSWarning(!hasPostScript(emailBody));
       setBannedWordsFound(detectBannedWords(emailBody));
+      
+      // Check for long paragraphs
+      const longParas = findLongParagraphs(emailBody, 3);
+      setLongParagraphCount(longParas.length);
     }
   }, [emailBody]);
 
@@ -339,6 +356,78 @@ ${email.ctas[selectedCta]}`;
     }
   };
 
+  const handleAutoFormatParagraphs = async () => {
+    setIsFormattingParagraphs(true);
+    try {
+      const longParas = findLongParagraphs(emailBody, 3);
+      
+      if (longParas.length === 0) {
+        toast({
+          title: "No long paragraphs found",
+          description: "Email formatting looks good!",
+        });
+        return;
+      }
+
+      // Build prompt to format paragraphs
+      const prompt = buildParagraphFormattingPrompt(longParas.map(p => p.text));
+
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
+        "generate-email",
+        { body: { prompt } }
+      );
+
+      if (aiError) throw aiError;
+
+      // Parse formatted paragraphs
+      const formattedParagraphs = JSON.parse(aiResponse.generatedText);
+      
+      // Apply formatting
+      const formattedText = applyFormattedParagraphs(
+        emailBody,
+        longParas,
+        formattedParagraphs
+      );
+
+      // Prepare comparisons for preview
+      const comparisons = longParas.map((lp, index) => ({
+        original: lp.text,
+        formatted: formattedParagraphs[index] || lp.text,
+        sentenceCount: lp.sentenceCount,
+      }));
+
+      setParagraphComparisons(comparisons);
+      setPendingFormattedText(formattedText);
+      setShowParagraphPreview(true);
+    } catch (error: any) {
+      toast({
+        title: "Formatting failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFormattingParagraphs(false);
+    }
+  };
+
+  const handleApproveParagraphFormatting = () => {
+    setEmailBody(pendingFormattedText);
+    setShowParagraphPreview(false);
+    setParagraphComparisons([]);
+    setPendingFormattedText("");
+    
+    toast({
+      title: "Formatting applied!",
+      description: "Paragraphs have been broken for better readability.",
+    });
+  };
+
+  const handleCancelParagraphFormatting = () => {
+    setShowParagraphPreview(false);
+    setParagraphComparisons([]);
+    setPendingFormattedText("");
+  };
+
   if (!email) return null;
 
   return (
@@ -391,24 +480,55 @@ ${email.ctas[selectedCta]}`;
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Email Body</h2>
-            {showPSWarning && (
-              <Button
-                onClick={handleAddPS}
-                variant="outline"
-                size="sm"
-                disabled={isAddingPS}
-              >
-                {isAddingPS ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Adding P.S...
-                  </>
-                ) : (
-                  "Add P.S."
-                )}
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {longParagraphCount > 0 && (
+                <Button
+                  onClick={handleAutoFormatParagraphs}
+                  variant="outline"
+                  size="sm"
+                  disabled={isFormattingParagraphs}
+                >
+                  {isFormattingParagraphs ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Formatting...
+                    </>
+                  ) : (
+                    <>
+                      <AlignLeft className="mr-2 h-4 w-4" />
+                      Auto-Format Paragraphs
+                    </>
+                  )}
+                </Button>
+              )}
+              {showPSWarning && (
+                <Button
+                  onClick={handleAddPS}
+                  variant="outline"
+                  size="sm"
+                  disabled={isAddingPS}
+                >
+                  {isAddingPS ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Adding P.S...
+                    </>
+                  ) : (
+                    "Add P.S."
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
+
+          {longParagraphCount > 0 && (
+            <Alert className="mb-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+                Found {longParagraphCount} long paragraph{longParagraphCount > 1 ? 's' : ''} ({">"}3 sentences). Click "Auto-Format Paragraphs" to break them up for better readability.
+              </AlertDescription>
+            </Alert>
+          )}
           
           {showPSWarning && (
             <Alert className="mb-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
@@ -574,6 +694,15 @@ ${email.ctas[selectedCta]}`;
             )}
           </Button>
         </div>
+
+        {/* Paragraph Preview Dialog */}
+        <ParagraphPreviewDialog
+          open={showParagraphPreview}
+          onOpenChange={setShowParagraphPreview}
+          comparisons={paragraphComparisons}
+          onApprove={handleApproveParagraphFormatting}
+          onCancel={handleCancelParagraphFormatting}
+        />
       </div>
     </div>
   );
