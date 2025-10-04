@@ -32,6 +32,7 @@ import {
   buildReaderFocusPrompt,
   type ReaderFocusMetrics 
 } from "@/lib/readerFocus";
+import { checkBlandness, buildHumanizePrompt, type BlandnessResult } from "@/lib/blandnessCheck";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -71,6 +72,8 @@ export default function EmailView() {
   const [pendingFormattedText, setPendingFormattedText] = useState("");
   const [isIncreasingReaderFocus, setIsIncreasingReaderFocus] = useState(false);
   const [frameworkInfo, setFrameworkInfo] = useState<{ id: string; name: string } | null>(null);
+  const [blandnessResult, setBlandnessResult] = useState<BlandnessResult | null>(null);
+  const [isHumanizing, setIsHumanizing] = useState(false);
 
   useEffect(() => {
     loadEmail();
@@ -82,6 +85,7 @@ export default function EmailView() {
       setReaderFocusMetrics(calculateReaderFocus(emailBody));
       setShowPSWarning(!hasPostScript(emailBody));
       setBannedWordsFound(detectBannedWords(emailBody));
+      setBlandnessResult(checkBlandness(emailBody));
       
       // Check for long paragraphs
       const longParas = findLongParagraphs(emailBody, 3);
@@ -478,6 +482,42 @@ ${email.ctas[selectedCta]}`;
     }
   };
 
+  const handleHumanize = async () => {
+    setIsHumanizing(true);
+    try {
+      const prompt = buildHumanizePrompt(emailBody);
+
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
+        "generate-email",
+        { body: { prompt } }
+      );
+
+      if (aiError) throw aiError;
+
+      const humanizedEmail = aiResponse.generatedText.trim();
+      setEmailBody(humanizedEmail);
+      
+      // Recheck blandness
+      const newBlandness = checkBlandness(humanizedEmail);
+      setBlandnessResult(newBlandness);
+
+      toast({
+        title: "Email humanized!",
+        description: newBlandness.isBland 
+          ? "Some template language still detected" 
+          : "Sounds much more natural now",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to humanize",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsHumanizing(false);
+    }
+  };
+
   if (!email) return null;
 
   return (
@@ -585,6 +625,51 @@ ${email.ctas[selectedCta]}`;
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800 dark:text-yellow-200">
                 Missing P.S. section - this is critical for conversions. Click "Add P.S." to append one.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* BLANDNESS WARNING */}
+          {blandnessResult?.isBland && (
+            <Alert className="mb-4 border-red-600 bg-red-50 dark:bg-red-950">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <AlertDescription>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-bold text-red-900 dark:text-red-100 text-lg mb-1">
+                        ❌ TEMPLATE LANGUAGE DETECTED
+                      </p>
+                      <p className="text-red-800 dark:text-red-200 mb-2">
+                        This sounds like every other marketing email.
+                      </p>
+                      <p className="text-red-700 dark:text-red-300 text-sm mb-2">
+                        Found {blandnessResult.count} template phrase{blandnessResult.count > 1 ? 's' : ''}:
+                      </p>
+                      <ul className="list-disc list-inside text-red-700 dark:text-red-300 text-sm space-y-1">
+                        {blandnessResult.foundPhrases.map((phrase, idx) => (
+                          <li key={idx}>"{phrase}"</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <Button
+                      onClick={handleHumanize}
+                      variant="destructive"
+                      size="sm"
+                      disabled={isHumanizing}
+                      className="shrink-0"
+                    >
+                      {isHumanizing ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          Humanizing...
+                        </>
+                      ) : (
+                        "Make It Human"
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </AlertDescription>
             </Alert>
           )}
