@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { analyzeReadability } from "@/lib/readability";
+import { calculateReaderFocus } from "@/lib/readerFocus";
 
 export default function CampaignBuilder() {
   const navigate = useNavigate();
@@ -86,9 +87,10 @@ export default function CampaignBuilder() {
 
       // Analyze readability
       const metrics = analyzeReadability(emailData.emailBody);
+      const readerFocus = calculateReaderFocus(emailData.emailBody);
 
       // Prepare metadata
-      const metadata: any = { metrics };
+      const metadata: any = { metrics, readerFocus };
       if (emailData.uniqueMechanism) {
         metadata.uniqueMechanism = emailData.uniqueMechanism;
       }

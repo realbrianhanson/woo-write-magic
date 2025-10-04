@@ -11,6 +11,7 @@ import { EmailMetrics } from "@/components/EmailMetrics";
 import { UniqueMechanismDisplay } from "@/components/UniqueMechanismDisplay";
 import { CritiquePanel } from "@/components/CritiquePanel";
 import { ParagraphPreviewDialog } from "@/components/ParagraphPreviewDialog";
+import { ReaderFocusDisplay } from "@/components/ReaderFocusDisplay";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
 import { hasPostScript, buildPostScriptPrompt } from "@/lib/postscript";
@@ -25,6 +26,11 @@ import {
   buildParagraphFormattingPrompt,
   applyFormattedParagraphs,
 } from "@/lib/paragraphFormatter";
+import { 
+  calculateReaderFocus, 
+  buildReaderFocusPrompt,
+  type ReaderFocusMetrics 
+} from "@/lib/readerFocus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -44,6 +50,7 @@ export default function EmailView() {
   const [selectedCta, setSelectedCta] = useState(0);
   const [emailBody, setEmailBody] = useState("");
   const [metrics, setMetrics] = useState<ReadabilityMetrics | null>(null);
+  const [readerFocusMetrics, setReaderFocusMetrics] = useState<ReaderFocusMetrics | null>(null);
   const [uniqueMechanism, setUniqueMechanism] = useState<UniqueMechanism | null>(null);
   const [isSimplifying, setIsSimplifying] = useState(false);
   const [isRegeneratingMechanism, setIsRegeneratingMechanism] = useState(false);
@@ -61,6 +68,7 @@ export default function EmailView() {
     Array<{ original: string; formatted: string; sentenceCount: number }>
   >([]);
   const [pendingFormattedText, setPendingFormattedText] = useState("");
+  const [isIncreasingReaderFocus, setIsIncreasingReaderFocus] = useState(false);
 
   useEffect(() => {
     loadEmail();
@@ -69,6 +77,7 @@ export default function EmailView() {
   useEffect(() => {
     if (emailBody) {
       setMetrics(analyzeReadability(emailBody));
+      setReaderFocusMetrics(calculateReaderFocus(emailBody));
       setShowPSWarning(!hasPostScript(emailBody));
       setBannedWordsFound(detectBannedWords(emailBody));
       
@@ -99,6 +108,9 @@ export default function EmailView() {
     setEmailBody(data.body);
     if (data.metadata && typeof data.metadata === 'object' && 'metrics' in data.metadata) {
       setMetrics(data.metadata.metrics as unknown as ReadabilityMetrics);
+    }
+    if (data.metadata && typeof data.metadata === 'object' && 'readerFocus' in data.metadata) {
+      setReaderFocusMetrics(data.metadata.readerFocus as unknown as ReaderFocusMetrics);
     }
     if (data.metadata && typeof data.metadata === 'object' && 'uniqueMechanism' in data.metadata) {
       setUniqueMechanism(data.metadata.uniqueMechanism as unknown as UniqueMechanism);
@@ -428,6 +440,39 @@ ${email.ctas[selectedCta]}`;
     setPendingFormattedText("");
   };
 
+  const handleIncreaseReaderFocus = async () => {
+    setIsIncreasingReaderFocus(true);
+    try {
+      const prompt = buildReaderFocusPrompt(emailBody);
+
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
+        "generate-email",
+        { body: { prompt } }
+      );
+
+      if (aiError) throw aiError;
+
+      const improvedEmail = aiResponse.generatedText.trim();
+      const newMetrics = calculateReaderFocus(improvedEmail);
+      
+      setEmailBody(improvedEmail);
+      setReaderFocusMetrics(newMetrics);
+
+      toast({
+        title: "Reader focus improved!",
+        description: `Increased from ${readerFocusMetrics?.ratio}% to ${newMetrics.ratio}%`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to improve reader focus",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsIncreasingReaderFocus(false);
+    }
+  };
+
   if (!email) return null;
 
   return (
@@ -583,6 +628,18 @@ ${email.ctas[selectedCta]}`;
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Readability Analysis</h2>
             <EmailMetrics metrics={metrics} />
+          </div>
+        )}
+
+        {/* Reader Focus */}
+        {readerFocusMetrics && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Reader Focus</h2>
+            <ReaderFocusDisplay 
+              metrics={readerFocusMetrics}
+              onIncreaseReaderFocus={handleIncreaseReaderFocus}
+              isIncreasing={isIncreasingReaderFocus}
+            />
           </div>
         )}
 
