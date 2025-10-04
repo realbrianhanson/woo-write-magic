@@ -8,8 +8,15 @@ import { ArrowLeft, Copy, Save, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EmailMetrics } from "@/components/EmailMetrics";
+import { UniqueMechanismDisplay } from "@/components/UniqueMechanismDisplay";
 import { analyzeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { buildEmailPrompt } from "@/lib/prompts";
+
+interface UniqueMechanism {
+  nickname: string;
+  rootCause: string;
+  metaphor: string;
+}
 
 export default function EmailView() {
   const { id } = useParams();
@@ -21,7 +28,9 @@ export default function EmailView() {
   const [selectedCta, setSelectedCta] = useState(0);
   const [emailBody, setEmailBody] = useState("");
   const [metrics, setMetrics] = useState<ReadabilityMetrics | null>(null);
+  const [uniqueMechanism, setUniqueMechanism] = useState<UniqueMechanism | null>(null);
   const [isSimplifying, setIsSimplifying] = useState(false);
+  const [isRegeneratingMechanism, setIsRegeneratingMechanism] = useState(false);
 
   useEffect(() => {
     loadEmail();
@@ -54,6 +63,9 @@ export default function EmailView() {
     setEmailBody(data.body);
     if (data.metadata && typeof data.metadata === 'object' && 'metrics' in data.metadata) {
       setMetrics(data.metadata.metrics as unknown as ReadabilityMetrics);
+    }
+    if (data.metadata && typeof data.metadata === 'object' && 'uniqueMechanism' in data.metadata) {
+      setUniqueMechanism(data.metadata.uniqueMechanism as unknown as UniqueMechanism);
     }
   };
 
@@ -123,6 +135,56 @@ ${email.ctas[selectedCta]}`;
     }
   };
 
+  const handleRegenerateMechanism = async () => {
+    setIsRegeneratingMechanism(true);
+    try {
+      const prompt = buildEmailPrompt(
+        { ...campaign.settings, useUniqueMechanism: true },
+        email.sequence_position,
+        1,
+        false
+      );
+
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
+        "generate-email",
+        { body: { prompt } }
+      );
+
+      if (aiError) throw aiError;
+
+      const emailData = JSON.parse(aiResponse.generatedText);
+      
+      if (emailData.uniqueMechanism) {
+        setUniqueMechanism(emailData.uniqueMechanism);
+        
+        // Save the new mechanism
+        const currentMetadata = email.metadata || {};
+        await supabase
+          .from("emails")
+          .update({ 
+            metadata: { 
+              ...currentMetadata, 
+              uniqueMechanism: emailData.uniqueMechanism 
+            } as any 
+          })
+          .eq("id", id);
+
+        toast({
+          title: "Mechanism regenerated!",
+          description: "New unique mechanism created for your email.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Regeneration failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegeneratingMechanism(false);
+    }
+  };
+
   if (!email) return null;
 
   return (
@@ -187,6 +249,34 @@ ${email.ctas[selectedCta]}`;
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Readability Analysis</h2>
             <EmailMetrics metrics={metrics} />
+          </div>
+        )}
+
+        {/* Unique Mechanism */}
+        {uniqueMechanism && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Unique Mechanism</h2>
+              <Button
+                onClick={handleRegenerateMechanism}
+                variant="outline"
+                size="sm"
+                disabled={isRegeneratingMechanism}
+              >
+                {isRegeneratingMechanism ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Regenerating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Regenerate Mechanism
+                  </>
+                )}
+              </Button>
+            </div>
+            <UniqueMechanismDisplay mechanism={uniqueMechanism} />
           </div>
         )}
 

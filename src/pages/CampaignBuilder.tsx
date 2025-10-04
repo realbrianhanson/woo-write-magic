@@ -26,6 +26,7 @@ export default function CampaignBuilder() {
     campaignType: "Product Launch",
     sequenceLength: "5",
     primaryEmotion: "Hope & Transformation",
+    useUniqueMechanism: true,
   });
 
   const handleSubmit = async (e: React.FormEvent, simplify: boolean = false) => {
@@ -63,6 +64,7 @@ export default function CampaignBuilder() {
           campaignType: formData.campaignType,
           primaryEmotion: formData.primaryEmotion,
           sequenceLength: parseInt(formData.sequenceLength),
+          useUniqueMechanism: formData.useUniqueMechanism,
         },
         1,
         parseInt(formData.sequenceLength),
@@ -85,6 +87,12 @@ export default function CampaignBuilder() {
       // Analyze readability
       const metrics = analyzeReadability(emailData.emailBody);
 
+      // Prepare metadata
+      const metadata: any = { metrics };
+      if (emailData.uniqueMechanism) {
+        metadata.uniqueMechanism = emailData.uniqueMechanism;
+      }
+
       // Save email
       const { data: email, error: emailError } = await supabase
         .from("emails")
@@ -94,7 +102,7 @@ export default function CampaignBuilder() {
           subject_lines: emailData.subjectLines,
           body: emailData.emailBody,
           ctas: emailData.ctas,
-          metadata: { metrics } as any,
+          metadata: metadata as any,
         }])
         .select()
         .single();
@@ -250,6 +258,28 @@ export default function CampaignBuilder() {
                 <Label htmlFor="greed">Greed & Opportunity</Label>
               </div>
             </RadioGroup>
+          </div>
+
+          {/* Advanced Section */}
+          <div className="space-y-4 bg-card p-6 rounded-lg border">
+            <h2 className="text-xl font-semibold">Advanced (Optional)</h2>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="uniqueMechanism"
+                checked={formData.useUniqueMechanism}
+                onChange={(e) =>
+                  setFormData({ ...formData, useUniqueMechanism: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="uniqueMechanism" className="font-normal">
+                Generate unique mechanism (recommended)
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Creates a proprietary-sounding framework that differentiates your offer
+            </p>
           </div>
 
           <Button

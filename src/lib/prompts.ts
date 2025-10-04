@@ -8,6 +8,7 @@ interface CampaignSettings {
   campaignType: string;
   primaryEmotion: string;
   sequenceLength?: number;
+  useUniqueMechanism?: boolean;
 }
 
 const READABILITY_RULES = `
@@ -39,6 +40,35 @@ EXTRA SIMPLIFICATION REQUIRED:
 `
     : '';
 
+  const uniqueMechanismRules = settings.useUniqueMechanism
+    ? `
+UNIQUE MECHANISM REQUIREMENT:
+You MUST create a compelling unique mechanism that positions this solution as different:
+
+1. IDENTIFY ROOT CAUSE:
+   - Find a surprising or counterintuitive root cause of their pain
+   - Something they haven't heard before
+   - Make it feel like "the missing 1% they've been overlooking"
+
+2. CREATE CATCHY NICKNAME:
+   - Give the mechanism a memorable name (e.g., "The 3-Minute Morning Reset", "The Revenue Reversal Method")
+   - Make it sound proprietary and exclusive
+   - Use numbers, metaphors, or power words
+
+3. EXPLAIN WITH METAPHOR:
+   - Use a simple, relatable metaphor to explain how it works
+   - Make the complex feel simple
+   - Create an "aha!" moment
+
+4. INTEGRATE INTO EMAIL:
+   - Position the unique mechanism as the core differentiator
+   - Build intrigue around it
+   - Make readers curious to learn more
+
+IMPORTANT: Return the mechanism details in the metadata for display.
+`
+    : '';
+
   return `You are a master direct response copywriter specializing in high-converting email campaigns.
 
 CAMPAIGN TYPE: ${settings.campaignType}
@@ -57,6 +87,7 @@ AUDIENCE & PSYCHOLOGY:
 
 ${READABILITY_RULES}
 ${simplificationRules}
+${uniqueMechanismRules}
 
 DIRECT RESPONSE FRAMEWORK:
 1. Hook with pattern interrupt (first 3 seconds critical)
@@ -79,7 +110,12 @@ Return ONLY valid JSON in this exact format:
     "CTA option 1",
     "CTA option 2", 
     "CTA option 3"
-  ]
+  ]${settings.useUniqueMechanism ? `,
+  "uniqueMechanism": {
+    "nickname": "The catchy name for the mechanism",
+    "rootCause": "The surprising root cause explanation",
+    "metaphor": "The simple metaphor used to explain it"
+  }` : ''}
 }
 
 Remember: Simple words. Short sentences. Maximum impact.`;
