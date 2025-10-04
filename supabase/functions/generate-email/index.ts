@@ -1,4 +1,4 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// Deno edge function for email generation
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
