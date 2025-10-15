@@ -144,36 +144,47 @@ export default function CampaignBuilder() {
 
   // Detect and fetch URL content
   const handleDescriptionChange = async (value: string) => {
-    setFormData({ ...formData, description: value });
-
-    // Check if the value is a URL
-    const urlPattern = /^https?:\/\/[^\s]+$/;
-    if (urlPattern.test(value.trim())) {
+    // Check if the value contains a URL (more flexible pattern)
+    const urlPattern = /https?:\/\/[^\s]+/;
+    const urlMatch = value.trim().match(urlPattern);
+    
+    if (urlMatch) {
+      const url = urlMatch[0];
       setIsFetchingUrl(true);
       try {
+        console.log('Detected URL, fetching content:', url);
         const { data, error } = await supabase.functions.invoke('fetch-webpage', {
-          body: { url: value.trim() }
+          body: { url }
         });
+
+        console.log('Fetch webpage response:', data, error);
 
         if (error) throw error;
 
-        if (data.success) {
+        if (data?.success && data?.content) {
           setFormData({ ...formData, description: data.content });
           toast({
             title: "Page content fetched!",
             description: "Sales page content has been extracted and will be used to generate your email.",
           });
+        } else {
+          throw new Error('No content returned from webpage');
         }
       } catch (error: any) {
         console.error('Error fetching URL:', error);
         toast({
           title: "Couldn't fetch page",
-          description: "Using the URL as-is. You can paste the page content directly instead.",
+          description: error.message || "Using the URL as-is. You can paste the page content directly instead.",
           variant: "destructive",
         });
+        // Keep the URL in the field if fetch fails
+        setFormData({ ...formData, description: value });
       } finally {
         setIsFetchingUrl(false);
       }
+    } else {
+      // No URL detected, just update the description normally
+      setFormData({ ...formData, description: value });
     }
   };
 
