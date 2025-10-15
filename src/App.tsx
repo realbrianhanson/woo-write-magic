@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CampaignBuilder from "./pages/CampaignBuilder";
+import CampaignDetail from "./pages/CampaignDetail";
 import EmailView from "./pages/EmailView";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/campaign/new" element={<CampaignBuilder />} />
+          <Route path="/campaign/:id" element={<CampaignDetail />} />
           <Route path="/email/:id" element={<EmailView />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +22,11 @@ import { FunnelContextInput } from "@/components/FunnelContextInput";
 export default function CampaignBuilder() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [existingCampaignId, setExistingCampaignId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     productName: "",
@@ -57,6 +60,87 @@ export default function CampaignBuilder() {
       sequence_position_context: "",
     },
   });
+
+  // Load existing campaign if campaignId is provided
+  useEffect(() => {
+    const campaignId = searchParams.get("campaignId");
+    if (campaignId) {
+      loadExistingCampaign(campaignId);
+    }
+  }, [searchParams]);
+
+  const loadExistingCampaign = async (campaignId: string) => {
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data: campaign, error } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("id", campaignId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (campaign) {
+        setExistingCampaignId(campaignId);
+        
+        // Load campaign settings into form
+        const settings = (campaign.settings || {}) as any;
+        setFormData({
+          productName: campaign.name || settings.productName || "",
+          description: settings.description || "",
+          price: settings.price || "",
+          audience: settings.audience || "",
+          painPoint: settings.painPoint || "",
+          desiredResult: settings.desiredResult || "",
+          campaignType: campaign.campaign_type || settings.campaignType || "Product Launch",
+          sequenceLength: settings.sequenceLength || "5",
+          primaryEmotion: settings.primaryEmotion || "Hope & Transformation",
+          useUniqueMechanism: settings.useUniqueMechanism ?? true,
+          competitorCopy: settings.competitorCopy || "",
+          audienceReviews: settings.audienceReviews || "",
+          voiceTone: campaign.voice_tone || settings.voiceTone || "casual-friend",
+          voiceExamples: campaign.voice_examples || settings.voiceExamples || [],
+          specificObjections: campaign.specific_objections || settings.specificObjections || [],
+          differentiation: (campaign.differentiation || settings.differentiation || {
+            unfair_advantage: "",
+            vs_competitors: "",
+            category_position: "",
+          }) as any,
+          transformationTimeline: (campaign.transformation_timeline || settings.transformationTimeline || {
+            time_to_first_results: "",
+            specific_metrics: "",
+            progression: "",
+          }) as any,
+          funnelContext: (campaign.funnel_context || settings.funnelContext || {
+            traffic_temperature: "warm",
+            funnel_stage: "consideration",
+            sequence_position_context: "",
+          }) as any,
+        });
+
+        toast({
+          title: "Campaign loaded",
+          description: "Generate another email using these campaign settings",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading campaign:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load campaign",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Detect and fetch URL content
   const handleDescriptionChange = async (value: string) => {
@@ -102,25 +186,33 @@ export default function CampaignBuilder() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Create campaign
-      const { data: campaign, error: campaignError } = await supabase
-        .from("campaigns")
-        .insert({
-          user_id: user.id,
-          name: formData.productName,
-          campaign_type: formData.campaignType,
-          settings: formData,
-          voice_tone: formData.voiceTone,
-          voice_examples: formData.voiceExamples,
-          specific_objections: formData.specificObjections,
-          differentiation: formData.differentiation,
-          transformation_timeline: formData.transformationTimeline,
-          funnel_context: formData.funnelContext,
-        })
-        .select()
-        .single();
+      let campaign;
 
-      if (campaignError) throw campaignError;
+      // If we're using an existing campaign, just use that ID
+      if (existingCampaignId) {
+        campaign = { id: existingCampaignId };
+      } else {
+        // Create new campaign
+        const { data: newCampaign, error: campaignError } = await supabase
+          .from("campaigns")
+          .insert({
+            user_id: user.id,
+            name: formData.productName,
+            campaign_type: formData.campaignType,
+            settings: formData,
+            voice_tone: formData.voiceTone,
+            voice_examples: formData.voiceExamples,
+            specific_objections: formData.specificObjections,
+            differentiation: formData.differentiation,
+            transformation_timeline: formData.transformationTimeline,
+            funnel_context: formData.funnelContext,
+          })
+          .select()
+          .single();
+
+        if (campaignError) throw campaignError;
+        campaign = newCampaign;
+      }
 
       // Build AI prompt
       const prompt = buildEmailPrompt(
@@ -215,13 +307,28 @@ export default function CampaignBuilder() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-12 px-4 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
+          <p className="text-muted-foreground">Loading campaign...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Campaign Details</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            {existingCampaignId ? "Generate Another Email" : "Campaign Details"}
+          </h1>
           <p className="text-muted-foreground">
-            Type: {formData.campaignType}
+            {existingCampaignId 
+              ? `Reusing settings from: ${formData.productName}` 
+              : `Type: ${formData.campaignType}`}
           </p>
         </div>
 
@@ -433,7 +540,7 @@ export default function CampaignBuilder() {
             ) : (
               <>
                 <Sparkles className="mr-2 h-5 w-5" />
-                Generate Campaign
+                {existingCampaignId ? "Generate Another Email" : "Generate Campaign"}
               </>
             )}
           </Button>
