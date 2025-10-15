@@ -57,8 +57,15 @@ Deno.serve(async (req) => {
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
-    console.log("AI gateway response received");
+    console.log("AI gateway response received, status:", response.status);
     const data = await response.json();
+    console.log("Response data:", JSON.stringify(data).substring(0, 200));
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error("Invalid response structure:", data);
+      throw new Error("Invalid AI response structure");
+    }
+    
     let generatedText = data.choices[0].message.content;
 
     // Strip markdown code fences if present

@@ -273,8 +273,18 @@ export default function CampaignBuilder() {
       );
       
       clearTimeout(timeout);
-      console.log("AI Response:", aiResponse, "Error:", aiError);
-      if (aiError) throw aiError;
+      console.log("AI Response received:", aiResponse);
+      console.log("AI Error:", aiError);
+      
+      if (aiError) {
+        console.error("Function invocation error:", aiError);
+        throw new Error(`Failed to generate email: ${aiError.message || 'Unknown error'}`);
+      }
+      
+      if (!aiResponse || !aiResponse.generatedText) {
+        console.error("Invalid response structure:", aiResponse);
+        throw new Error("No email content received from AI");
+      }
 
       // Parse AI response
       console.log("Parsing AI response...");

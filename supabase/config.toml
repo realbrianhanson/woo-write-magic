@@ -1,1 +1,7 @@
 project_id = "saijnmapdwqvqpbbdfdo"
+
+[functions.generate-email]
+verify_jwt = false
+
+[functions.fetch-webpage]
+verify_jwt = false
