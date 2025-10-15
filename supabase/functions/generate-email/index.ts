@@ -43,6 +43,20 @@ Deno.serve(async (req) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 180000); // 3 minute timeout for GPT-5
 
+    const requestBody = {
+      model: "openai/gpt-5",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert direct response copywriter. Always return valid JSON only, no markdown formatting.",
+        },
+        { role: "user", content: prompt },
+      ],
+    };
+    
+    console.log("Request body:", JSON.stringify(requestBody).substring(0, 300));
+    
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -51,27 +65,29 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "openai/gpt-5",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are an expert direct response copywriter. Always return valid JSON only, no markdown formatting.",
-            },
-            { role: "user", content: prompt },
-          ],
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal,
       }
     );
 
     clearTimeout(timeout);
+    
+    console.log("AI gateway response status:", response.status);
+    console.log("AI gateway response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      return new Response(
+        JSON.stringify({ 
+          error: `AI gateway error: ${response.status}`,
+          details: errorText
+        }),
+        {
+          status: response.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     console.log("AI gateway response received, status:", response.status);
