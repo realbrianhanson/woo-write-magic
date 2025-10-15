@@ -11,7 +11,6 @@ interface CampaignSettings {
   primaryEmotion: string;
   sequenceLength?: number;
   useUniqueMechanism?: boolean;
-  storyStructure?: string;
   competitorCopy?: string;
   audienceReviews?: string;
 }
@@ -202,16 +201,11 @@ Start with a hook that drops them into a moment they recognize.
   },
 };
 
-function getStoryExamples(structure?: string): string {
-  const selected = structure || 'surprise';
-  const storyData = STORY_STRUCTURES[selected as keyof typeof STORY_STRUCTURES] || STORY_STRUCTURES.surprise;
+function getStoryExamples(): string {
+  const storyData = STORY_STRUCTURES.surprise;
   
   return `
-YOU'RE USING: "${storyData.name}" STRUCTURE
-
 ${storyData.examples}
-
----
 
 MATCH THIS ENERGY. This tone. This rhythm. This realness.
 `;
@@ -379,7 +373,7 @@ Price: $${settings.price}
 EMOTIONAL STATE TO TAP:
 ${settings.primaryEmotion}
 
-${getStoryExamples(settings.storyStructure)}
+${getStoryExamples()}
 
 ${settings.competitorCopy ? `
 COMPETITOR COPY ANALYSIS:
