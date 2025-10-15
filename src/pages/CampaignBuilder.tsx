@@ -190,15 +190,18 @@ export default function CampaignBuilder() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submitted, starting generation...");
     await generateEmail(false);
   };
 
   const generateEmail = async (simplify: boolean = false) => {
+    console.log("generateEmail called with simplify:", simplify);
     setIsGenerating(true);
 
     try {
       // Get user
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("User authenticated:", user?.id);
       if (!user) throw new Error("Not authenticated");
 
       let campaign;
@@ -257,6 +260,7 @@ export default function CampaignBuilder() {
       );
 
       // Call Lovable AI
+      console.log("Calling generate-email function with prompt length:", prompt.length);
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
         "generate-email",
         {
@@ -264,10 +268,13 @@ export default function CampaignBuilder() {
         }
       );
 
+      console.log("AI Response:", aiResponse, "Error:", aiError);
       if (aiError) throw aiError;
 
       // Parse AI response
+      console.log("Parsing AI response...");
       const emailData = JSON.parse(aiResponse.generatedText);
+      console.log("Email data parsed successfully");
 
       // Use the first variant as the primary email body for backward compatibility
       const primaryVariant = emailData.variants && emailData.variants[0] 
