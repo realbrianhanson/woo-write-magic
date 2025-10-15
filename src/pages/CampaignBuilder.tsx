@@ -259,10 +259,10 @@ export default function CampaignBuilder() {
         simplify
       );
 
-      // Call Lovable AI with timeout
+      // Call Lovable AI with timeout (longer timeout for GPT-5)
       console.log("Calling generate-email function with prompt length:", prompt.length);
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+      const timeout = setTimeout(() => controller.abort(), 200000); // 3.3 minute timeout
       
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
         "generate-email",
@@ -334,9 +334,24 @@ export default function CampaignBuilder() {
       navigate(`/email/${email.id}`);
     } catch (error: any) {
       console.error("Generation error:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        status: error?.status,
+        details: error?.details,
+        full: error
+      });
+      
+      let errorMessage = "Failed to generate email. Please try again.";
+      
+      if (error?.message?.includes("aborted")) {
+        errorMessage = "Request timed out. The AI took too long to respond. Try simplifying your inputs.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Generation failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

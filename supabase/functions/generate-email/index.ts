@@ -15,16 +15,33 @@ Deno.serve(async (req) => {
     const { prompt } = await req.json();
     console.log("Received prompt, length:", prompt?.length);
     
+    if (!prompt) {
+      console.error("No prompt provided");
+      return new Response(
+        JSON.stringify({ error: "No prompt provided" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");
-      throw new Error("LOVABLE_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "AI service not configured - LOVABLE_API_KEY missing" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     console.log("Calling AI gateway...");
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 55000); // 55s timeout
+    const timeout = setTimeout(() => controller.abort(), 180000); // 3 minute timeout for GPT-5
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -81,8 +98,18 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("Error in generate-email function:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      type: typeof error,
+      error: JSON.stringify(error, null, 2)
+    });
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Unknown error occurred",
+        details: error instanceof Error ? error.stack : String(error)
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
