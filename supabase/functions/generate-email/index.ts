@@ -77,7 +77,47 @@ Deno.serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("AI gateway error (gpt-5):", response.status, errorText);
+
+      // Fallback to gpt-5-mini on server/gateway errors
+      const retriable = [500, 502, 503, 504].includes(response.status);
+      if (retriable) {
+        try {
+          console.log("Retrying with openai/gpt-5-mini...");
+          const fallbackBody = { ...requestBody, model: "openai/gpt-5-mini" };
+          const fallbackResp = await fetch(
+            "https://ai.gateway.lovable.dev/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(fallbackBody),
+              signal: controller.signal,
+            }
+          );
+          console.log("Fallback response status:", fallbackResp.status);
+          if (fallbackResp.ok) {
+            const data = await fallbackResp.json();
+            console.log("Fallback model succeeded");
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+              console.error("Invalid fallback response structure:", data);
+              return new Response(JSON.stringify({ error: "Invalid AI response structure (fallback)" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
+            }
+            let generatedText = data.choices[0].message.content?.trim() ?? "";
+            if (generatedText.startsWith("```json")) generatedText = generatedText.replace(/^```json\n/, "").replace(/\n```$/, "");
+            else if (generatedText.startsWith("```")) generatedText = generatedText.replace(/^```\n/, "").replace(/\n```$/, "");
+            return new Response(JSON.stringify({ generatedText }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          } else {
+            const fbText = await fallbackResp.text();
+            console.error("Fallback model failed:", fallbackResp.status, fbText);
+          }
+        } catch (fbErr) {
+          console.error("Fallback call error:", fbErr);
+        }
+      }
+
       return new Response(
         JSON.stringify({ 
           error: `AI gateway error: ${response.status}`,
