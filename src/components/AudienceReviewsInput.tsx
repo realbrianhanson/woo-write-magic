@@ -61,29 +61,50 @@ export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputPr
   const handleTextChange = async (newValue: string) => {
     onChange(newValue);
 
-    // Check if the value is a URL
+    // Check if the value contains URLs (one per line or comma-separated)
+    const lines = newValue.split(/[\n,]/).map(line => line.trim()).filter(line => line);
     const urlPattern = /^https?:\/\/[^\s]+$/;
-    if (urlPattern.test(newValue.trim())) {
+    const urls = lines.filter(line => urlPattern.test(line));
+
+    if (urls.length > 0) {
       setIsFetchingUrl(true);
       try {
-        const { data, error } = await supabase.functions.invoke('fetch-webpage', {
-          body: { url: newValue.trim() }
+        toast({
+          title: `Fetching ${urls.length} review page${urls.length > 1 ? 's' : ''}...`,
+          description: "This may take a moment",
         });
 
-        if (error) throw error;
+        const fetchPromises = urls.map(url => 
+          supabase.functions.invoke('fetch-webpage', {
+            body: { url }
+          })
+        );
 
-        if (data.success) {
-          onChange(data.content);
+        const results = await Promise.all(fetchPromises);
+        
+        const successfulContent = results
+          .filter(result => !result.error && result.data?.success)
+          .map(result => result.data.content)
+          .join('\n\n---\n\n');
+
+        const failedCount = results.filter(result => result.error || !result.data?.success).length;
+
+        if (successfulContent) {
+          onChange(successfulContent);
           toast({
-            title: "Reviews page fetched!",
-            description: "Customer reviews have been extracted from the page.",
+            title: `${urls.length - failedCount} page${urls.length - failedCount > 1 ? 's' : ''} fetched!`,
+            description: failedCount > 0 
+              ? `${failedCount} URL${failedCount > 1 ? 's' : ''} failed to fetch`
+              : "Customer reviews have been extracted from all pages.",
           });
+        } else {
+          throw new Error("Failed to fetch any pages");
         }
       } catch (error: any) {
-        console.error('Error fetching URL:', error);
+        console.error('Error fetching URLs:', error);
         toast({
-          title: "Couldn't fetch page",
-          description: "Using the URL as-is. You can paste the review text directly instead.",
+          title: "Couldn't fetch pages",
+          description: "You can paste the review text directly instead.",
           variant: "destructive",
         });
       } finally {
@@ -160,16 +181,24 @@ export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputPr
         {/* Text Paste Area */}
         <div>
           <Label htmlFor="reviews-text" className="text-sm font-medium flex items-center gap-2">
-            Or paste customer reviews, feedback, or review page URL
+            Paste customer reviews, feedback, or review page URLs
             <LinkIcon className="h-3 w-3 text-muted-foreground" />
           </Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Paste multiple URLs (one per line) to fetch reviews from multiple pages
+          </p>
           <Textarea
             id="reviews-text"
             value={value}
             onChange={(e) => handleTextChange(e.target.value)}
-            placeholder="Paste customer reviews, testimonials, feedback, or a URL to a review page...
+            placeholder="Paste customer reviews, testimonials, feedback, or URLs to review pages (one per line)...
 
-Example format:
+Examples:
+https://www.amazon.com/product-reviews/...
+https://www.trustpilot.com/review/...
+https://www.g2.com/products/...
+
+Or paste text directly:
 
 WHAT THEY LIKE:
 - 'Finally something that actually works!'
