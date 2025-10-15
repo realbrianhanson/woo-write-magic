@@ -13,11 +13,18 @@ Deno.serve(async (req) => {
 
   try {
     const { prompt } = await req.json();
+    console.log("Received prompt, length:", prompt?.length);
+    
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    console.log("Calling AI gateway...");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 55000); // 55s timeout
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -28,7 +35,7 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-5",
+          model: "google/gemini-2.5-flash",
           messages: [
             {
               role: "system",
@@ -38,8 +45,11 @@ Deno.serve(async (req) => {
             { role: "user", content: prompt },
           ],
         }),
+        signal: controller.signal,
       }
     );
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -47,6 +57,7 @@ Deno.serve(async (req) => {
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
+    console.log("AI gateway response received");
     const data = await response.json();
     let generatedText = data.choices[0].message.content;
 

@@ -259,15 +259,20 @@ export default function CampaignBuilder() {
         simplify
       );
 
-      // Call Lovable AI
+      // Call Lovable AI with timeout
       console.log("Calling generate-email function with prompt length:", prompt.length);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+      
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke(
         "generate-email",
         {
           body: { prompt },
+          signal: controller.signal
         }
       );
-
+      
+      clearTimeout(timeout);
       console.log("AI Response:", aiResponse, "Error:", aiError);
       if (aiError) throw aiError;
 
