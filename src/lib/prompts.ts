@@ -13,6 +13,24 @@ interface CampaignSettings {
   useUniqueMechanism?: boolean;
   competitorCopy?: string;
   audienceReviews?: string;
+  voiceTone?: string;
+  voiceExamples?: string[];
+  specificObjections?: string[];
+  differentiation?: {
+    unfair_advantage: string;
+    vs_competitors: string;
+    category_position: string;
+  };
+  transformationTimeline?: {
+    time_to_first_results: string;
+    specific_metrics: string;
+    progression: string;
+  };
+  funnelContext?: {
+    traffic_temperature: string;
+    funnel_stage: string;
+    sequence_position_context: string;
+  };
 }
 
 const STORY_STRUCTURES = {
@@ -352,7 +370,96 @@ Return this in the JSON:
 `
     : '';
 
-  return `You're writing a high-converting email. Not as a copywriter. As a human who figured something out and wants to share it.
+  const voiceContext = settings.voiceTone && settings.voiceExamples && settings.voiceExamples.length > 0
+    ? `
+VOICE & TONE TO MATCH:
+Voice Style: ${settings.voiceTone}
+
+EXAMPLE EMAILS IN THIS VOICE:
+${settings.voiceExamples.map((ex, i) => `
+EXAMPLE ${i + 1}:
+${ex}
+---
+`).join('\n')}
+
+CRITICAL: Match this exact voice, tone, sentence structure, and energy level.
+`
+    : settings.voiceTone
+    ? `
+VOICE STYLE: ${settings.voiceTone}
+Write in this voice consistently throughout.
+`
+    : '';
+
+  const objectionsContext = settings.specificObjections && settings.specificObjections.length > 0
+    ? `
+SPECIFIC OBJECTIONS TO ADDRESS:
+${settings.specificObjections.map((obj, i) => `${i + 1}. "${obj}"`).join('\n')}
+
+CRITICAL: Pre-empt these objections subtly in the email. Don't list them, weave them into the narrative.
+Address the real concern behind each objection, not just the surface-level statement.
+`
+    : '';
+
+  const differentiationContext = settings.differentiation
+    ? `
+DIFFERENTIATION & POSITIONING:
+
+Your Unfair Advantage:
+${settings.differentiation.unfair_advantage || 'Not specified'}
+
+You vs. Competitors:
+${settings.differentiation.vs_competitors || 'Not specified'}
+
+Category Position:
+${settings.differentiation.category_position || 'Not specified'}
+
+USE THIS to show why they should choose YOU, not just any solution.
+`
+    : '';
+
+  const transformationContext = settings.transformationTimeline
+    ? `
+TRANSFORMATION TIMELINE:
+
+Time to First Results:
+${settings.transformationTimeline.time_to_first_results || 'Not specified'}
+
+Specific Metrics:
+${settings.transformationTimeline.specific_metrics || 'Not specified'}
+
+Week-by-Week Progression:
+${settings.transformationTimeline.progression || 'Not specified'}
+
+CRITICAL: Use SPECIFIC timelines and metrics. Paint the picture of their journey.
+Make the transformation feel real, achievable, and believable.
+`
+    : '';
+
+  const funnelContext = settings.funnelContext
+    ? `
+FUNNEL CONTEXT:
+
+Traffic Temperature: ${settings.funnelContext.traffic_temperature}
+${settings.funnelContext.traffic_temperature === 'cold' ? '→ They don\'t know you. Build trust first, then sell.' : 
+  settings.funnelContext.traffic_temperature === 'warm' ? '→ They know you exist. Convince them you\'re the right choice.' :
+  '→ They\'re ready. Just remove final objections and close.'}
+
+Funnel Stage: ${settings.funnelContext.funnel_stage}
+${settings.funnelContext.funnel_stage === 'awareness' ? '→ Focus on the PROBLEM they\'re facing.' :
+  settings.funnelContext.funnel_stage === 'consideration' ? '→ Focus on your SOLUTION to their problem.' :
+  '→ Focus on the OFFER and why they should buy NOW.'}
+
+${settings.funnelContext.sequence_position_context ? `
+Sequence Context:
+${settings.funnelContext.sequence_position_context}
+
+CRITICAL: Reference what came before. Build on the narrative arc.
+` : ''}
+`
+    : '';
+
+  return `You're writing 3 DIFFERENT VERSIONS of a high-converting email. Each version uses a different strategic approach.
 
 CAMPAIGN CONTEXT:
 Email ${emailNumber} of ${totalEmails} - ${settings.campaignType}
@@ -372,6 +479,16 @@ Price: $${settings.price}
 
 EMOTIONAL STATE TO TAP:
 ${settings.primaryEmotion}
+
+${voiceContext}
+
+${objectionsContext}
+
+${differentiationContext}
+
+${transformationContext}
+
+${funnelContext}
 
 ${getStoryExamples()}
 
@@ -417,19 +534,82 @@ ${simplificationRules}
 
 ${uniqueMechanismRules}
 
-OUTPUT FORMAT (this is the only technical part):
-Return valid JSON only:
+OUTPUT FORMAT:
+Return valid JSON with 3 DIFFERENT VARIANTS:
+
 {
-  "subjectLines": [
-    "Subject 1 (casual, curiosity-driven, no clickbait)",
-    "Subject 2 (pattern interrupt or question)",
-    "Subject 3 (personal or confession style)"
+  "variants": [
+    {
+      "type": "safe",
+      "approach": "Proven structure, low-risk, tested formula",
+      "subject_lines": [
+        "Subject 1 (benefit-focused, clear)",
+        "Subject 2 (social proof angle)",
+        "Subject 3 (curiosity with clarity)"
+      ],
+      "body": "Full email text for SAFE variant. Use [First Name]. Use \\n\\n for paragraph breaks.",
+      "ctas": [
+        "CTA 1 (direct, benefit-driven)",
+        "CTA 2 (low-pressure, specific)",
+        "CTA 3 (action-oriented)"
+      ]
+    },
+    {
+      "type": "aggressive",
+      "approach": "Bold, polarizing, challenges status quo",
+      "subject_lines": [
+        "Subject 1 (provocative, pattern interrupt)",
+        "Subject 2 (controversial truth)",
+        "Subject 3 (calls out the BS)"
+      ],
+      "body": "Full email text for AGGRESSIVE variant. Bolder voice, stronger opinions, more polarizing.",
+      "ctas": [
+        "CTA 1 (urgent, direct)",
+        "CTA 2 (FOMO-driven)",
+        "CTA 3 (challenge-based)"
+      ]
+    },
+    {
+      "type": "pattern_interrupt",
+      "approach": "Unexpected angle, breaks the mold",
+      "subject_lines": [
+        "Subject 1 (completely unexpected)",
+        "Subject 2 (weird but intriguing)",
+        "Subject 3 (makes them go 'wait, what?')"
+      ],
+      "body": "Full email text for PATTERN INTERRUPT variant. Completely different angle from what they expect.",
+      "ctas": [
+        "CTA 1 (creative, unique)",
+        "CTA 2 (ties back to the pattern break)",
+        "CTA 3 (surprising but clear)"
+      ]
+    }
   ],
-  "emailBody": "Full email text. Use [First Name] for personalization. Use \\n\\n for paragraph breaks. Sound human. Make them feel something.",
-  "ctas": [
-    "CTA 1 (conversational, low-pressure)",
-    "CTA 2 (benefit-focused, specific)",
-    "CTA 3 (urgency without desperation)"
+  "subject_line_variants": [
+    {"category": "curiosity", "subject": "Subject line here", "character_count": 45, "predicted_performance": "high"},
+    {"category": "benefit", "subject": "Subject line here", "character_count": 52, "predicted_performance": "medium"},
+    {"category": "fear", "subject": "Subject line here", "character_count": 38, "predicted_performance": "high"},
+    {"category": "social_proof", "subject": "Subject line here", "character_count": 41, "predicted_performance": "medium"},
+    {"category": "urgency", "subject": "Subject line here", "character_count": 36, "predicted_performance": "high"},
+    {"category": "curiosity", "subject": "Different curiosity angle", "character_count": 44, "predicted_performance": "medium"},
+    {"category": "benefit", "subject": "Another benefit angle", "character_count": 50, "predicted_performance": "high"},
+    {"category": "pattern_interrupt", "subject": "Unexpected angle", "character_count": 39, "predicted_performance": "high"},
+    {"category": "social_proof", "subject": "Another proof angle", "character_count": 47, "predicted_performance": "medium"},
+    {"category": "urgency", "subject": "Time-based urgency", "character_count": 40, "predicted_performance": "high"}
+  ],
+  "critique": {
+    "readability_score": 85,
+    "spam_triggers": ["free", "guarantee"],
+    "curiosity_gaps": ["Opens with strong hook", "Withholds solution details effectively"],
+    "weak_points": ["CTA could be stronger", "Missing specific proof point in paragraph 3"],
+    "strengths": ["Strong emotional resonance", "Clear transformation timeline", "Mirrors audience language well"],
+    "improvement_suggestions": ["Add specific metric in opening", "Strengthen P.S. with urgency", "Include one more objection pre-emption"]
+  },
+  "testing_recommendations": [
+    "Test Subject Line #1 (curiosity) vs #7 (benefit) - both predicted high",
+    "A/B test Safe variant vs Aggressive variant to gauge audience tolerance",
+    "Test CTA placement: mid-email vs end-only",
+    "Try removing the P.S. to see if it affects conversion"
   ]${settings.useUniqueMechanism ? `,
   "uniqueMechanism": {
     "nickname": "The name",
@@ -438,5 +618,10 @@ Return valid JSON only:
   }` : ''}
 }
 
-Remember: Write like a human. Sound like a text message. Make them feel something. No one should recognize this as marketing.`;
+Remember: 
+- Generate 3 COMPLETE variants with different strategic approaches
+- 10 subject lines categorized by type
+- Pre-send critique with specific feedback
+- Testing recommendations based on the variants
+- Write like a human. Sound like a text message. Make them feel something.`;
 }

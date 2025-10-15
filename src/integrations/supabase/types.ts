@@ -18,32 +18,50 @@ export type Database = {
         Row: {
           campaign_type: string
           created_at: string | null
+          differentiation: Json | null
+          funnel_context: Json | null
           id: string
           name: string
           settings: Json
+          specific_objections: string[] | null
+          transformation_timeline: Json | null
           updated_at: string | null
           user_id: string
+          voice_examples: string[] | null
           voice_profile_id: string | null
+          voice_tone: string | null
         }
         Insert: {
           campaign_type: string
           created_at?: string | null
+          differentiation?: Json | null
+          funnel_context?: Json | null
           id?: string
           name: string
           settings?: Json
+          specific_objections?: string[] | null
+          transformation_timeline?: Json | null
           updated_at?: string | null
           user_id: string
+          voice_examples?: string[] | null
           voice_profile_id?: string | null
+          voice_tone?: string | null
         }
         Update: {
           campaign_type?: string
           created_at?: string | null
+          differentiation?: Json | null
+          funnel_context?: Json | null
           id?: string
           name?: string
           settings?: Json
+          specific_objections?: string[] | null
+          transformation_timeline?: Json | null
           updated_at?: string | null
           user_id?: string
+          voice_examples?: string[] | null
           voice_profile_id?: string | null
+          voice_tone?: string | null
         }
         Relationships: [
           {
@@ -60,31 +78,43 @@ export type Database = {
           body: string
           campaign_id: string
           created_at: string | null
+          critique: Json | null
           ctas: string[] | null
           id: string
           metadata: Json | null
           sequence_position: number | null
+          subject_line_variants: Json | null
           subject_lines: string[] | null
+          testing_recommendations: Json | null
+          variants: Json | null
         }
         Insert: {
           body: string
           campaign_id: string
           created_at?: string | null
+          critique?: Json | null
           ctas?: string[] | null
           id?: string
           metadata?: Json | null
           sequence_position?: number | null
+          subject_line_variants?: Json | null
           subject_lines?: string[] | null
+          testing_recommendations?: Json | null
+          variants?: Json | null
         }
         Update: {
           body?: string
           campaign_id?: string
           created_at?: string | null
+          critique?: Json | null
           ctas?: string[] | null
           id?: string
           metadata?: Json | null
           sequence_position?: number | null
+          subject_line_variants?: Json | null
           subject_lines?: string[] | null
+          testing_recommendations?: Json | null
+          variants?: Json | null
         }
         Relationships: [
           {

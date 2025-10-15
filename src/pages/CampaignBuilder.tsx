@@ -13,6 +13,11 @@ import { analyzeReadability } from "@/lib/readability";
 import { calculateReaderFocus } from "@/lib/readerFocus";
 import { CompetitorCopyInput } from "@/components/CompetitorCopyInput";
 import { AudienceReviewsInput } from "@/components/AudienceReviewsInput";
+import { VoiceToneSelector } from "@/components/VoiceToneSelector";
+import { ObjectionsInput } from "@/components/ObjectionsInput";
+import { DifferentiationInput } from "@/components/DifferentiationInput";
+import { TransformationTimelineInput } from "@/components/TransformationTimelineInput";
+import { FunnelContextInput } from "@/components/FunnelContextInput";
 
 export default function CampaignBuilder() {
   const navigate = useNavigate();
@@ -33,6 +38,24 @@ export default function CampaignBuilder() {
     useUniqueMechanism: true,
     competitorCopy: "",
     audienceReviews: "",
+    voiceTone: "casual-friend",
+    voiceExamples: [] as string[],
+    specificObjections: [] as string[],
+    differentiation: {
+      unfair_advantage: "",
+      vs_competitors: "",
+      category_position: "",
+    },
+    transformationTimeline: {
+      time_to_first_results: "",
+      specific_metrics: "",
+      progression: "",
+    },
+    funnelContext: {
+      traffic_temperature: "warm",
+      funnel_stage: "consideration",
+      sequence_position_context: "",
+    },
   });
 
   // Detect and fetch URL content
@@ -87,6 +110,12 @@ export default function CampaignBuilder() {
           name: formData.productName,
           campaign_type: formData.campaignType,
           settings: formData,
+          voice_tone: formData.voiceTone,
+          voice_examples: formData.voiceExamples,
+          specific_objections: formData.specificObjections,
+          differentiation: formData.differentiation,
+          transformation_timeline: formData.transformationTimeline,
+          funnel_context: formData.funnelContext,
         })
         .select()
         .single();
@@ -108,6 +137,12 @@ export default function CampaignBuilder() {
           useUniqueMechanism: formData.useUniqueMechanism,
           competitorCopy: formData.competitorCopy,
           audienceReviews: formData.audienceReviews,
+          voiceTone: formData.voiceTone,
+          voiceExamples: formData.voiceExamples,
+          specificObjections: formData.specificObjections,
+          differentiation: formData.differentiation,
+          transformationTimeline: formData.transformationTimeline,
+          funnelContext: formData.funnelContext,
         },
         1,
         parseInt(formData.sequenceLength),
@@ -127,27 +162,35 @@ export default function CampaignBuilder() {
       // Parse AI response
       const emailData = JSON.parse(aiResponse.generatedText);
 
-      // Analyze readability
-      const metrics = analyzeReadability(emailData.emailBody);
-      const readerFocus = calculateReaderFocus(emailData.emailBody);
+      // Use the first variant as the primary email body for backward compatibility
+      const primaryVariant = emailData.variants && emailData.variants[0] 
+        ? emailData.variants[0] 
+        : { body: emailData.emailBody || "", subject_lines: emailData.subjectLines || [], ctas: emailData.ctas || [] };
+
+      // Analyze readability on primary variant
+      const metrics = analyzeReadability(primaryVariant.body);
+      const readerFocus = calculateReaderFocus(primaryVariant.body);
 
       // Prepare metadata
       const metadata: any = { metrics, readerFocus };
       if (emailData.uniqueMechanism) {
         metadata.uniqueMechanism = emailData.uniqueMechanism;
       }
-      // Framework no longer included in new generations
 
-      // Save email
+      // Save email with all new fields
       const { data: email, error: emailError } = await supabase
         .from("emails")
         .insert([{
           campaign_id: campaign.id,
           sequence_position: 1,
-          subject_lines: emailData.subjectLines,
-          body: emailData.emailBody,
-          ctas: emailData.ctas,
+          subject_lines: primaryVariant.subject_lines,
+          body: primaryVariant.body,
+          ctas: primaryVariant.ctas,
           metadata: metadata as any,
+          variants: emailData.variants || [],
+          critique: emailData.critique || {},
+          subject_line_variants: emailData.subject_line_variants || [],
+          testing_recommendations: emailData.testing_recommendations || [],
         }])
         .select()
         .single();
@@ -309,6 +352,38 @@ export default function CampaignBuilder() {
               </div>
             </RadioGroup>
           </div>
+
+          {/* Voice & Tone */}
+          <VoiceToneSelector
+            value={formData.voiceTone}
+            examples={formData.voiceExamples}
+            onChange={(value) => setFormData({ ...formData, voiceTone: value })}
+            onExamplesChange={(examples) => setFormData({ ...formData, voiceExamples: examples })}
+          />
+
+          {/* Specific Objections */}
+          <ObjectionsInput
+            value={formData.specificObjections}
+            onChange={(value) => setFormData({ ...formData, specificObjections: value })}
+          />
+
+          {/* Differentiation */}
+          <DifferentiationInput
+            value={formData.differentiation}
+            onChange={(value) => setFormData({ ...formData, differentiation: value })}
+          />
+
+          {/* Transformation Timeline */}
+          <TransformationTimelineInput
+            value={formData.transformationTimeline}
+            onChange={(value) => setFormData({ ...formData, transformationTimeline: value })}
+          />
+
+          {/* Funnel Context */}
+          <FunnelContextInput
+            value={formData.funnelContext}
+            onChange={(value) => setFormData({ ...formData, funnelContext: value })}
+          />
 
           {/* Competitor Copy Input */}
           <CompetitorCopyInput
