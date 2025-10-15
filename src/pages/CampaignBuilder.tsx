@@ -18,6 +18,7 @@ export default function CampaignBuilder() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
 
   const [formData, setFormData] = useState({
     productName: "",
@@ -33,6 +34,41 @@ export default function CampaignBuilder() {
     competitorCopy: "",
     audienceReviews: "",
   });
+
+  // Detect and fetch URL content
+  const handleDescriptionChange = async (value: string) => {
+    setFormData({ ...formData, description: value });
+
+    // Check if the value is a URL
+    const urlPattern = /^https?:\/\/[^\s]+$/;
+    if (urlPattern.test(value.trim())) {
+      setIsFetchingUrl(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('fetch-webpage', {
+          body: { url: value.trim() }
+        });
+
+        if (error) throw error;
+
+        if (data.success) {
+          setFormData({ ...formData, description: data.content });
+          toast({
+            title: "Page content fetched!",
+            description: "Sales page content has been extracted and will be used to generate your email.",
+          });
+        }
+      } catch (error: any) {
+        console.error('Error fetching URL:', error);
+        toast({
+          title: "Couldn't fetch page",
+          description: "Using the URL as-is. You can paste the page content directly instead.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsFetchingUrl(false);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent, simplify: boolean = false) => {
     e.preventDefault();
@@ -169,13 +205,18 @@ export default function CampaignBuilder() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => handleDescriptionChange(e.target.value)}
                 placeholder="Describe your product or paste a sales page URL..."
                 rows={4}
                 required
+                disabled={isFetchingUrl}
               />
+              {isFetchingUrl && (
+                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Fetching page content...
+                </p>
+              )}
             </div>
 
             <div>
