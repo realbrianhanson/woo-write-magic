@@ -188,8 +188,12 @@ export default function CampaignBuilder() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent, simplify: boolean = false) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await generateEmail(false);
+  };
+
+  const generateEmail = async (simplify: boolean = false) => {
     setIsGenerating(true);
 
     try {
@@ -343,7 +347,7 @@ export default function CampaignBuilder() {
           </p>
         </div>
 
-        <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Product/Offer */}
           <div className="space-y-4 bg-card p-6 rounded-lg border">
             <h2 className="text-xl font-semibold">Product/Offer</h2>
