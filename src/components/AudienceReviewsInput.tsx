@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Upload, X, FileText, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Upload, X, FileText, MessageSquare, ThumbsUp, ThumbsDown, Loader2, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AudienceReviewsInputProps {
   value: string;
@@ -13,6 +15,8 @@ interface AudienceReviewsInputProps {
 
 export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const { toast } = useToast();
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -52,6 +56,40 @@ export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputPr
 
   const handleClear = () => {
     onChange("");
+  };
+
+  const handleTextChange = async (newValue: string) => {
+    onChange(newValue);
+
+    // Check if the value is a URL
+    const urlPattern = /^https?:\/\/[^\s]+$/;
+    if (urlPattern.test(newValue.trim())) {
+      setIsFetchingUrl(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('fetch-webpage', {
+          body: { url: newValue.trim() }
+        });
+
+        if (error) throw error;
+
+        if (data.success) {
+          onChange(data.content);
+          toast({
+            title: "Reviews page fetched!",
+            description: "Customer reviews have been extracted from the page.",
+          });
+        }
+      } catch (error: any) {
+        console.error('Error fetching URL:', error);
+        toast({
+          title: "Couldn't fetch page",
+          description: "Using the URL as-is. You can paste the review text directly instead.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsFetchingUrl(false);
+      }
+    }
   };
 
   return (
@@ -121,14 +159,15 @@ export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputPr
 
         {/* Text Paste Area */}
         <div>
-          <Label htmlFor="reviews-text" className="text-sm font-medium">
-            Or paste customer reviews and feedback
+          <Label htmlFor="reviews-text" className="text-sm font-medium flex items-center gap-2">
+            Or paste customer reviews, feedback, or review page URL
+            <LinkIcon className="h-3 w-3 text-muted-foreground" />
           </Label>
           <Textarea
             id="reviews-text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="Paste customer reviews, testimonials, or feedback here...
+            onChange={(e) => handleTextChange(e.target.value)}
+            placeholder="Paste customer reviews, testimonials, feedback, or a URL to a review page...
 
 Example format:
 
@@ -148,7 +187,14 @@ PAIN POINTS MENTIONED:
 - 'Before this I tried 5 different tools and...'
 "
             className="mt-2 min-h-[250px] font-mono text-sm"
+            disabled={isFetchingUrl}
           />
+          {isFetchingUrl && (
+            <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Fetching reviews from URL...
+            </p>
+          )}
           {value && (
             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
               <span>{value.split(/\s+/).length} words</span>
