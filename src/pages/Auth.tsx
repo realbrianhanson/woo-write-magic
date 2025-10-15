@@ -66,7 +66,7 @@ const Auth = () => {
 
         toast({
           title: "Account created!",
-          description: "Welcome to WooWrite. You're all set.",
+          description: "Welcome to Copy Sloth. You're all set.",
         });
       }
     } catch (error: any) {

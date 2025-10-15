@@ -123,7 +123,7 @@ const Dashboard = () => {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <h1 className="text-2xl font-bold text-primary">WooWrite</h1>
+          <h1 className="text-2xl font-bold text-primary">Copy Sloth</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
               {user?.email}

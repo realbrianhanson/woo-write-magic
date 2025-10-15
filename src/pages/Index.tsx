@@ -124,7 +124,7 @@ const Index = () => {
                 ))}
               </div>
               <p className="mb-4 text-lg italic text-foreground">
-                "Finally, emails that actually make sales. WooWrite paid for itself in the first campaign."
+                "Finally, emails that actually make sales. Copy Sloth paid for itself in the first campaign."
               </p>
               <p className="font-semibold text-muted-foreground">— Mike R., E-commerce Owner</p>
             </div>
