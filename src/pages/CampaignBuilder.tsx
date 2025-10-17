@@ -18,6 +18,7 @@ import { ObjectionsInput } from "@/components/ObjectionsInput";
 import { DifferentiationInput } from "@/components/DifferentiationInput";
 import { TransformationTimelineInput } from "@/components/TransformationTimelineInput";
 import { FunnelContextInput } from "@/components/FunnelContextInput";
+import { UrlContentPreview } from "@/components/UrlContentPreview";
 
 export default function CampaignBuilder() {
   const navigate = useNavigate();
@@ -27,6 +28,11 @@ export default function CampaignBuilder() {
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [existingCampaignId, setExistingCampaignId] = useState<string | null>(null);
+  const [urlPreview, setUrlPreview] = useState<{
+    url: string;
+    content: string;
+    metadata?: { title?: string; description?: string };
+  } | null>(null);
 
   const [formData, setFormData] = useState({
     productName: "",
@@ -162,10 +168,15 @@ export default function CampaignBuilder() {
         if (error) throw error;
 
         if (data?.success && data?.content) {
-          setFormData({ ...formData, description: data.content });
+          // Show preview dialog instead of directly updating
+          setUrlPreview({
+            url,
+            content: data.content,
+            metadata: data.metadata,
+          });
           toast({
             title: "Page content fetched!",
-            description: "Sales page content has been extracted and will be used to generate your email.",
+            description: "Review the extracted content before using it.",
           });
         } else {
           throw new Error('No content returned from webpage');
@@ -186,6 +197,18 @@ export default function CampaignBuilder() {
       // No URL detected, just update the description normally
       setFormData({ ...formData, description: value });
     }
+  };
+
+  const handleApproveUrlContent = () => {
+    if (urlPreview) {
+      setFormData({ ...formData, description: urlPreview.content });
+      setUrlPreview(null);
+    }
+  };
+
+  const handleCancelUrlContent = () => {
+    setUrlPreview(null);
+    setFormData({ ...formData, description: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -597,6 +620,19 @@ export default function CampaignBuilder() {
             )}
           </Button>
         </form>
+
+        {/* URL Content Preview Dialog */}
+        {urlPreview && (
+          <UrlContentPreview
+            open={!!urlPreview}
+            onOpenChange={(open) => !open && setUrlPreview(null)}
+            url={urlPreview.url}
+            content={urlPreview.content}
+            metadata={urlPreview.metadata}
+            onApprove={handleApproveUrlContent}
+            onCancel={handleCancelUrlContent}
+          />
+        )}
       </div>
     </div>
   );
