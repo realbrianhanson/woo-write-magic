@@ -21,42 +21,61 @@ serve(async (req) => {
       );
     }
 
-    console.log('Fetching webpage:', url);
+    const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
+    if (!FIRECRAWL_API_KEY) {
+      console.error('FIRECRAWL_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ error: 'Firecrawl API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Fetch the webpage
-    const response = await fetch(url, {
+    console.log('Scraping webpage with Firecrawl:', url);
+
+    // Call Firecrawl API directly
+    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        url: url,
+        formats: ['markdown', 'html']
+      })
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch webpage: ${response.status} ${response.statusText}`);
+    if (!firecrawlResponse.ok) {
+      const errorText = await firecrawlResponse.text();
+      console.error('Firecrawl API error:', firecrawlResponse.status, errorText);
+      throw new Error(`Firecrawl API error: ${firecrawlResponse.status}`);
     }
 
-    const html = await response.text();
+    const scrapeResult = await firecrawlResponse.json();
+
+    if (!scrapeResult.success) {
+      throw new Error('Failed to scrape webpage with Firecrawl');
+    }
+
+    // Extract markdown content (preferred) or fallback to HTML
+    let content = scrapeResult.data?.markdown || scrapeResult.data?.html || '';
     
-    // Extract text content from HTML (simple approach)
-    // Remove script and style tags
-    let text = html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ') // Remove HTML tags
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .trim();
-
-    // Limit to reasonable length (first 5000 characters)
-    if (text.length > 5000) {
-      text = text.substring(0, 5000) + '...';
+    // Limit to reasonable length (first 10000 characters for better quality)
+    if (content.length > 10000) {
+      content = content.substring(0, 10000) + '...';
     }
 
-    console.log('Successfully extracted text from webpage');
+    console.log('Successfully scraped webpage with Firecrawl');
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        content: text,
-        url: url 
+        content: content,
+        url: url,
+        metadata: {
+          title: scrapeResult.data?.metadata?.title,
+          description: scrapeResult.data?.metadata?.description,
+        }
       }),
       { 
         status: 200, 
@@ -65,10 +84,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error fetching webpage:', error);
+    console.error('Error scraping webpage:', error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch webpage',
+        error: error instanceof Error ? error.message : 'Failed to scrape webpage',
         success: false 
       }),
       { 
