@@ -289,21 +289,23 @@ SOCIAL IMPACT (show how others will see them):
 Not: "You'll be successful"
 But: "Your team will ask how you got so much done. Your spouse will notice you're not stressed anymore. People will think you hired help."
 
-READING LEVEL: 6th grade maximum
-- Short words (Anglo-Saxon, not Latin)
-- 15 words per sentence max
-- No jargon unless building credibility
-- Break long thoughts into tiny sentences
+READING LEVEL: 6th-8th grade
+- Use simple words when possible
+- Vary sentence length naturally (5-25 words)
+- No unnecessary jargon
+- Write how people actually talk
 
 RHYTHM & FLOW:
-Short sentence.
-Then a longer one that builds on the idea and keeps them reading.
-Back to short.
+Mix it up naturally. Use sentence variety to create rhythm:
+- Short punchy statements for emphasis (4-8 words)
+- Medium sentences for storytelling and flow (12-18 words)  
+- Occasional longer sentences to build momentum (20-25 words max)
 
-Use triplets (three sentences that build):
-"You're tired of this.
-You've tried everything.
-Nothing's worked."
+AVOID choppy fragments. Don't write: "Two words. Three words. Four words here."
+INSTEAD write: "Here's what happened. I tested this approach for three weeks and discovered something that completely changed how I think about email marketing."
+
+Use natural pauses and connectors:
+"You're tired of trying things that don't work. You've spent months testing different strategies. And you're still not seeing the results you need."
 
 ALWAYS END WITH P.S.:
 Make it about the benefit + urgency + action
