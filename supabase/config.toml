@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.fetch-webpage]
 verify_jwt = false
+
+[functions.transcribe-audio]
+verify_jwt = false
