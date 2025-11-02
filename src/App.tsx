@@ -10,6 +10,7 @@ import Campaigns from "./pages/Campaigns";
 import CampaignBuilder from "./pages/CampaignBuilder";
 import CampaignDetail from "./pages/CampaignDetail";
 import EmailView from "./pages/EmailView";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/campaign/new" element={<CampaignBuilder />} />
           <Route path="/campaign/:id" element={<CampaignDetail />} />
           <Route path="/email/:id" element={<EmailView />} />
+          <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
