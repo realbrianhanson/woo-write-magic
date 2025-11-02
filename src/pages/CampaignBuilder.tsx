@@ -41,6 +41,7 @@ export default function CampaignBuilder() {
     productName: "",
     description: "",
     productUrl: "",
+    ctaLink: "",
     price: "",
     audience: "",
     painPoint: "",
@@ -112,6 +113,7 @@ export default function CampaignBuilder() {
           productName: campaign.name || settings.productName || "",
           description: settings.description || "",
           productUrl: settings.productUrl || "",
+          ctaLink: settings.ctaLink || "",
           price: settings.price || "",
           audience: settings.audience || "",
           painPoint: settings.painPoint || "",
@@ -289,6 +291,7 @@ export default function CampaignBuilder() {
           customerStories: formData.customerStories,
           controversialOpinions: formData.controversialOpinions,
           originStory: formData.originStory,
+          ctaLink: formData.ctaLink,
         },
         1,
         parseInt(formData.sequenceLength),
@@ -470,6 +473,21 @@ export default function CampaignBuilder() {
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Automatically extract main content from your landing page
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="ctaLink">CTA Link URL</Label>
+              <Input
+                id="ctaLink"
+                value={formData.ctaLink}
+                onChange={(e) =>
+                  setFormData({ ...formData, ctaLink: e.target.value })
+                }
+                placeholder="https://yoursite.com/buy"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This link will be embedded in the email CTAs
               </p>
             </div>
 

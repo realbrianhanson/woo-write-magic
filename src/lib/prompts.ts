@@ -36,6 +36,7 @@ interface CampaignSettings {
   customerStories?: string;
   controversialOpinions?: string;
   originStory?: string;
+  ctaLink?: string;
 }
 
 function getMarketSophisticationStrategy(sophistication: string): string {
@@ -645,6 +646,7 @@ ${settings.desiredResult}
 THE PRODUCT:
 ${settings.productName} - ${settings.description}
 Price: $${settings.price}
+${settings.ctaLink ? `\n🔗 CTA LINK: ${settings.ctaLink}\nCRITICAL: Embed this URL in all CTAs. Make the CTA button text clickable with this link.` : ''}
 
 EMOTIONAL STATE TO TAP:
 ${settings.primaryEmotion}
