@@ -77,7 +77,6 @@ export default function EmailView() {
   const [blandnessResult, setBlandnessResult] = useState<BlandnessResult | null>(null);
   const [isHumanizing, setIsHumanizing] = useState(false);
   const [emailFeeling, setEmailFeeling] = useState<string>("");
-  const [ctaLink, setCtaLink] = useState<string>("");
 
   useEffect(() => {
     loadEmail();
@@ -128,9 +127,6 @@ export default function EmailView() {
     if (data.metadata && typeof data.metadata === 'object' && 'framework' in data.metadata) {
       setFrameworkInfo(data.metadata.framework as unknown as { id: string; name: string });
     }
-    if (data.metadata && typeof data.metadata === 'object' && 'ctaLink' in data.metadata) {
-      setCtaLink(data.metadata.ctaLink as string);
-    }
   };
 
   const handleCopy = () => {
@@ -151,8 +147,7 @@ ${email.ctas[selectedCta]}`;
         body: emailBody,
         metadata: { 
           ...email.metadata,
-          metrics,
-          ctaLink 
+          metrics
         } as any
       })
       .eq("id", id);
@@ -847,23 +842,6 @@ ${email.ctas[selectedCta]}`;
                 </CardContent>
               </Card>
             ))}
-          </div>
-          
-          <div className="mt-4">
-            <label htmlFor="ctaLink" className="text-sm font-medium mb-2 block">
-              CTA Link URL
-            </label>
-            <Input
-              id="ctaLink"
-              type="url"
-              value={ctaLink}
-              onChange={(e) => setCtaLink(e.target.value)}
-              placeholder="https://example.com/landing-page"
-              className="w-full"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Enter the destination URL where this CTA should link to
-            </p>
           </div>
         </div>
 
