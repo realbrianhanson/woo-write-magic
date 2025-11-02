@@ -505,7 +505,16 @@ ${email.ctas[selectedCta]}`;
 
       if (aiError) throw aiError;
 
-      const humanizedEmail = aiResponse.generatedText.trim();
+      // The AI returns JSON with subject and body, we only need the body
+      let humanizedEmail: string;
+      try {
+        const parsedResponse = JSON.parse(aiResponse.generatedText);
+        humanizedEmail = parsedResponse.body || aiResponse.generatedText;
+      } catch {
+        // If parsing fails, use the raw text
+        humanizedEmail = aiResponse.generatedText.trim();
+      }
+      
       setEmailBody(humanizedEmail);
       
       // Recheck blandness
