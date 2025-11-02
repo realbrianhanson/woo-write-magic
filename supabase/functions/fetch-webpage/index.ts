@@ -183,9 +183,9 @@ serve(async (req) => {
       // Trim whitespace
       .trim();
     
-    // Limit to reasonable length (20000 characters for reviews)
-    if (content.length > 20000) {
-      content = content.substring(0, 20000) + '...';
+    // Limit to reasonable length (50000 characters for reviews - roughly 30-40 full reviews)
+    if (content.length > 50000) {
+      content = content.substring(0, 50000) + '\n\n[Content truncated - use "See all reviews" page for more reviews]';
     }
 
     console.log('Successfully scraped webpage with Firecrawl');
