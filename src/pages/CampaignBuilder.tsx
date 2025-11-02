@@ -443,7 +443,6 @@ export default function CampaignBuilder() {
               <div className="flex gap-2">
                 <Input
                   id="productUrl"
-                  type="url"
                   value={formData.productUrl}
                   onChange={(e) =>
                     setFormData({ ...formData, productUrl: e.target.value })
