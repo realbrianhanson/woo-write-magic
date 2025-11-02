@@ -77,6 +77,7 @@ export default function EmailView() {
   const [blandnessResult, setBlandnessResult] = useState<BlandnessResult | null>(null);
   const [isHumanizing, setIsHumanizing] = useState(false);
   const [emailFeeling, setEmailFeeling] = useState<string>("");
+  const [lastModified, setLastModified] = useState<string>("");
 
   useEffect(() => {
     loadEmail();
@@ -472,6 +473,9 @@ ${email.ctas[selectedCta]}`;
       
       setEmailBody(improvedEmail);
       setReaderFocusMetrics(newMetrics);
+      setLastModified("Reader Focus Improved");
+      
+      console.log("Email body updated to:", improvedEmail.substring(0, 100) + "...");
 
       toast({
         title: "Reader focus improved!",
@@ -500,17 +504,13 @@ ${email.ctas[selectedCta]}`;
 
       if (aiError) throw aiError;
 
-      // The AI returns JSON with subject and body, we only need the body
-      let humanizedEmail: string;
-      try {
-        const parsedResponse = JSON.parse(aiResponse.generatedText);
-        humanizedEmail = parsedResponse.body || aiResponse.generatedText;
-      } catch {
-        // If parsing fails, use the raw text
-        humanizedEmail = aiResponse.generatedText.trim();
-      }
+      // The AI returns plain text, use it directly
+      const humanizedEmail = aiResponse.generatedText.trim();
       
       setEmailBody(humanizedEmail);
+      setLastModified("Humanized");
+      
+      console.log("Email body updated (humanized) to:", humanizedEmail.substring(0, 100) + "...");
       
       // Recheck blandness
       const newBlandness = checkBlandness(humanizedEmail);
@@ -594,7 +594,14 @@ ${email.ctas[selectedCta]}`;
         {/* Email Body */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Email Body</h2>
+            <div>
+              <h2 className="text-xl font-semibold">Email Body</h2>
+              {lastModified && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  ✓ Last modified: {lastModified}
+                </p>
+              )}
+            </div>
             <div className="flex gap-2">
               {longParagraphCount > 0 && (
                 <Button
