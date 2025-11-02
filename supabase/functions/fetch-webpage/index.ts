@@ -117,6 +117,12 @@ serve(async (req) => {
       .replace(/!\[.*?\]\(.*?\)/g, '')
       // Remove standalone link markdown, keep just the text: [text](url) -> text
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove Amazon rating breakdowns (5 star4 star3 star... lines)
+      .replace(/[-•]\s*\d+\s*star\d+\s*star\d+\s*star\d+\s*star\d+\s*star.*/gi, '')
+      // Remove percentage lines (65%27%7%1%0%...)
+      .replace(/\d+%\d+%\d+%\d+%\d+%.*/g, '')
+      // Remove "How customer reviews and ratings work"
+      .replace(/How customer reviews and ratings work/gi, '')
       // Remove multiple blank lines
       .replace(/\n{3,}/g, '\n\n')
       // Remove common navigation patterns
