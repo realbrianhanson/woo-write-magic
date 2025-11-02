@@ -110,6 +110,20 @@ serve(async (req) => {
       .replace(/!\[.*?\]\(.*?\)/g, '')
       // Remove standalone link markdown, keep just the text: [text](url) -> text
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove "Customer reviews" header section
+      .replace(/Customer [Rr]eviews\s*/gi, '')
+      // Remove star ratings (4.5 out of 5 stars, etc.)
+      .replace(/_?\d+\.?\d*\s*out of\s*\d+\s*stars?_?/gi, '')
+      .replace(/\d+\.?\d*\s*out of\s*\d+/gi, '')
+      // Remove global ratings count
+      .replace(/\d+[,\d]*\s*global ratings?/gi, '')
+      // Remove Amazon explanation text
+      .replace(/Customer Reviews,.*?work on Amazon/gis, '')
+      .replace(/Learn more how customers reviews work on Amazon/gi, '')
+      // Remove "Review this product" section
+      .replace(/Review this product\s*/gi, '')
+      .replace(/Share your thoughts with other customers\s*/gi, '')
+      .replace(/Write a customer review\s*/gi, '')
       // Remove Amazon rating breakdowns (5 star4 star3 star... lines)
       .replace(/[-•]\s*\d+\s*star\d+\s*star\d+\s*star\d+\s*star\d+\s*star.*/gi, '')
       // Remove percentage lines (65%27%7%1%0%...)
@@ -125,6 +139,8 @@ serve(async (req) => {
       .replace(/^[-*_]{3,}\s*$/gm, '')
       // Remove markdown heading markers (### ## #)
       .replace(/^#{1,6}\s+/gm, '')
+      // Remove backslash line breaks
+      .replace(/\\\\/g, '')
       // Remove multiple blank lines
       .replace(/\n{3,}/g, '\n\n')
       // Remove common navigation patterns
