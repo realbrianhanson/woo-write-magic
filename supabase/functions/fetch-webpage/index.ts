@@ -38,10 +38,10 @@ serve(async (req) => {
     // For Amazon, we want ALL content including reviews, not just main content
     const scrapeConfig = isAmazon ? {
       url: url,
-      formats: ['markdown'],
+      formats: ['markdown', 'html'],  // Get both formats to extract hidden content
       onlyMainContent: false,  // Get everything to capture reviews
       excludeTags: ['script', 'style', 'iframe'],  // Only exclude non-content
-      waitFor: 3000  // Give more time for Amazon to load
+      waitFor: 5000  // Give more time for Amazon to fully render
     } : {
       url: url,
       formats: ['markdown'],
@@ -75,8 +75,30 @@ serve(async (req) => {
     // Extract markdown content only (cleaner for copywriting)
     let content = scrapeResult.data?.markdown || '';
     
-    // For Amazon pages, extract ONLY reviews section
-    if (isAmazon && content) {
+    // For Amazon, try to get full review text from HTML if available
+    if (isAmazon && scrapeResult.data?.html) {
+      console.log('Processing Amazon HTML for full reviews');
+      const html = scrapeResult.data.html;
+      
+      // Extract full review text from HTML (Amazon hides it in data attributes or spans)
+      const reviewMatches = html.match(/data-hook="review-body"[^>]*>[\s\S]*?<\/span>/gi);
+      if (reviewMatches && reviewMatches.length > 0) {
+        console.log('Found', reviewMatches.length, 'reviews in HTML');
+        // Extract just the text content from each review span
+        const fullReviews = reviewMatches.map((match: string) => {
+          // Remove HTML tags but keep the text
+          return match.replace(/<[^>]+>/g, '').trim();
+        }).join('\n\n');
+        
+        if (fullReviews) {
+          content = fullReviews;
+          console.log('Extracted full reviews from HTML, length:', content.length);
+        }
+      }
+    }
+    
+    // For Amazon pages, extract ONLY reviews section from markdown if HTML extraction failed
+    if (isAmazon && content && !scrapeResult.data?.html) {
       console.log('Processing Amazon page - extracting reviews only');
       
       // Look for review patterns in the content
