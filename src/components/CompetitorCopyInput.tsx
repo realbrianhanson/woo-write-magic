@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithVoice } from "@/components/ui/textarea-with-voice";
 import { Button } from "@/components/ui/button";
 import { Upload, X, FileText, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -124,7 +124,7 @@ export function CompetitorCopyInput({ value, onChange }: CompetitorCopyInputProp
           <Label htmlFor="competitor-text" className="text-sm font-medium">
             Or paste competitor email copy
           </Label>
-          <Textarea
+          <TextareaWithVoice
             id="competitor-text"
             value={value}
             onChange={(e) => onChange(e.target.value)}

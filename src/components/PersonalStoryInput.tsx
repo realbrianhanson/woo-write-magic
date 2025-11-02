@@ -1,5 +1,5 @@
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithVoice } from "@/components/ui/textarea-with-voice";
 import { BookOpen, Users, Megaphone, Rocket } from "lucide-react";
 
 interface PersonalStoryInputProps {
@@ -43,7 +43,7 @@ export function PersonalStoryInput({
           <BookOpen className={`w-4 h-4 ${getStatus(personalStories)}`} />
           <Label htmlFor="personalStories">Personal Experiences (Optional)</Label>
         </div>
-        <Textarea
+        <TextareaWithVoice
           id="personalStories"
           value={personalStories}
           onChange={(e) => onPersonalStoriesChange(e.target.value)}
@@ -65,7 +65,7 @@ The more specific, the more believable and engaging your emails will be."
           <Users className={`w-4 h-4 ${getStatus(customerStories)}`} />
           <Label htmlFor="customerStories">Customer Success Stories (Optional)</Label>
         </div>
-        <Textarea
+        <TextareaWithVoice
           id="customerStories"
           value={customerStories}
           onChange={(e) => onCustomerStoriesChange(e.target.value)}
@@ -87,7 +87,7 @@ Use real names (or pseudonyms), actual metrics, direct quotes, and timelines."
           <Megaphone className={`w-4 h-4 ${getStatus(controversialOpinions)}`} />
           <Label htmlFor="controversialOpinions">Controversial Opinions (Optional)</Label>
         </div>
-        <Textarea
+        <TextareaWithVoice
           id="controversialOpinions"
           value={controversialOpinions}
           onChange={(e) => onControversialOpinionsChange(e.target.value)}
@@ -109,7 +109,7 @@ These beliefs differentiate you and make your voice unique."
           <Rocket className={`w-4 h-4 ${getStatus(originStory)}`} />
           <Label htmlFor="originStory">Your Origin Story (Optional)</Label>
         </div>
-        <Textarea
+        <TextareaWithVoice
           id="originStory"
           value={originStory}
           onChange={(e) => onOriginStoryChange(e.target.value)}

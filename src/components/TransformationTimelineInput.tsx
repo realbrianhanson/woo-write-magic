@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithVoice } from "@/components/ui/textarea-with-voice";
 import { TrendingUp } from "lucide-react";
 
 interface TransformationTimelineInputProps {
@@ -34,7 +34,7 @@ export function TransformationTimelineInput({ value, onChange }: TransformationT
           <Label htmlFor="time-to-results" className="text-sm font-medium">
             Time to First Results
           </Label>
-          <Textarea
+          <TextareaWithVoice
             id="time-to-results"
             value={value.time_to_first_results}
             onChange={(e) => onChange({ ...value, time_to_first_results: e.target.value })}
@@ -48,7 +48,7 @@ export function TransformationTimelineInput({ value, onChange }: TransformationT
           <Label htmlFor="specific-metrics" className="text-sm font-medium">
             Specific Before/After Metrics
           </Label>
-          <Textarea
+          <TextareaWithVoice
             id="specific-metrics"
             value={value.specific_metrics}
             onChange={(e) => onChange({ ...value, specific_metrics: e.target.value })}
@@ -62,7 +62,7 @@ export function TransformationTimelineInput({ value, onChange }: TransformationT
           <Label htmlFor="progression" className="text-sm font-medium">
             Week-by-Week Progression
           </Label>
-          <Textarea
+          <TextareaWithVoice
             id="progression"
             value={value.progression}
             onChange={(e) => onChange({ ...value, progression: e.target.value })}

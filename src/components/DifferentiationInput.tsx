@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithVoice } from "@/components/ui/textarea-with-voice";
 import { Target } from "lucide-react";
 
 interface DifferentiationInputProps {
@@ -34,7 +34,7 @@ export function DifferentiationInput({ value, onChange }: DifferentiationInputPr
           <Label htmlFor="unfair-advantage" className="text-sm font-medium">
             Your Unfair Advantage
           </Label>
-          <Textarea
+          <TextareaWithVoice
             id="unfair-advantage"
             value={value.unfair_advantage}
             onChange={(e) => onChange({ ...value, unfair_advantage: e.target.value })}
@@ -48,7 +48,7 @@ export function DifferentiationInput({ value, onChange }: DifferentiationInputPr
           <Label htmlFor="vs-competitors" className="text-sm font-medium">
             You vs. Competitors
           </Label>
-          <Textarea
+          <TextareaWithVoice
             id="vs-competitors"
             value={value.vs_competitors}
             onChange={(e) => onChange({ ...value, vs_competitors: e.target.value })}
@@ -62,7 +62,7 @@ export function DifferentiationInput({ value, onChange }: DifferentiationInputPr
           <Label htmlFor="category-position" className="text-sm font-medium">
             Category Position
           </Label>
-          <Textarea
+          <TextareaWithVoice
             id="category-position"
             value={value.category_position}
             onChange={(e) => onChange({ ...value, category_position: e.target.value })}

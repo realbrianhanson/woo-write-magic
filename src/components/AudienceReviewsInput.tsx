@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { TextareaWithVoice } from "@/components/ui/textarea-with-voice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, X, FileText, MessageSquare, ThumbsUp, ThumbsDown, Loader2, ExternalLink } from "lucide-react";
@@ -233,7 +233,7 @@ export function AudienceReviewsInput({ value, onChange, url = "", onUrlChange }:
           <p className="text-xs text-muted-foreground mb-2">
             Or paste review text directly here
           </p>
-          <Textarea
+          <TextareaWithVoice
             id="reviews-text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
