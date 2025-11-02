@@ -110,11 +110,23 @@ serve(async (req) => {
       .replace(/!\[.*?\]\(.*?\)/g, '')
       // Remove standalone link markdown, keep just the text: [text](url) -> text
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove "Amazon Customer" labels
+      .replace(/Amazon Customer\s*/gi, '')
       // Remove "Customer reviews" header section
       .replace(/Customer [Rr]eviews\s*/gi, '')
       // Remove star ratings (4.5 out of 5 stars, etc.)
       .replace(/_?\d+\.?\d*\s*out of\s*\d+\s*stars?_?/gi, '')
       .replace(/\d+\.?\d*\s*out of\s*\d+/gi, '')
+      // Remove image review labels
+      .replace(/Images in this review\s*/gi, '')
+      .replace(/Reviews with images\s*/gi, '')
+      .replace(/See all photos\s*/gi, '')
+      .replace(/All photos\s*/gi, '')
+      // Remove pagination
+      .replace(/_?Previous page_?\s*/gi, '')
+      .replace(/_?Next page_?\s*/gi, '')
+      // Remove numbered lists (standalone numbers 1. 2. 3. etc.)
+      .replace(/^\d+\.\s*$/gm, '')
       // Remove global ratings count
       .replace(/\d+[,\d]*\s*global ratings?/gi, '')
       // Remove Amazon explanation text
