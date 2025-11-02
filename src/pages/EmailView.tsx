@@ -504,8 +504,20 @@ ${email.ctas[selectedCta]}`;
 
       if (aiError) throw aiError;
 
-      // The AI returns plain text, use it directly
-      const humanizedEmail = aiResponse.generatedText.trim();
+      // Try to parse as JSON first (in case AI returns it despite instructions)
+      let humanizedEmail: string;
+      const rawResponse = aiResponse.generatedText.trim();
+      
+      try {
+        const parsed = JSON.parse(rawResponse);
+        // If it's JSON with a body field, extract just the body
+        humanizedEmail = parsed.body || rawResponse;
+        console.log("Parsed JSON response, extracted body field");
+      } catch {
+        // If not JSON, use the raw text directly
+        humanizedEmail = rawResponse;
+        console.log("Using raw text response");
+      }
       
       setEmailBody(humanizedEmail);
       setLastModified("Humanized");

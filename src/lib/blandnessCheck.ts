@@ -81,7 +81,9 @@ USE:
 
 NO ONE SHOULD RECOGNIZE THIS AS MARKETING.
 
-Return ONLY the rewritten email body text.
+CRITICAL: Return ONLY the rewritten email body text as PLAIN TEXT.
+DO NOT return JSON. DO NOT include subject lines.
+ONLY return the email body copy itself.
 Keep the same core message and offer.
 Preserve all calls-to-action.
 Make it feel human.`;
