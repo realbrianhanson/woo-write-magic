@@ -458,6 +458,9 @@ ${email.ctas[selectedCta]}`;
 
   const handleIncreaseReaderFocus = async () => {
     setIsIncreasingReaderFocus(true);
+    console.log("🔵 Starting Reader Focus improvement...");
+    console.log("🔵 Current email body length:", emailBody.length);
+    
     try {
       const prompt = buildReaderFocusPrompt(emailBody);
 
@@ -466,16 +469,25 @@ ${email.ctas[selectedCta]}`;
         { body: { prompt } }
       );
 
-      if (aiError) throw aiError;
+      if (aiError) {
+        console.error("❌ AI Error:", aiError);
+        throw aiError;
+      }
 
+      console.log("🔵 AI Response received:", aiResponse);
+      
       const improvedEmail = aiResponse.generatedText.trim();
+      console.log("🟢 Improved email length:", improvedEmail.length);
+      console.log("🟢 First 200 chars:", improvedEmail.substring(0, 200));
+      
       const newMetrics = calculateReaderFocus(improvedEmail);
+      console.log("🟢 New metrics:", newMetrics);
       
       setEmailBody(improvedEmail);
       setReaderFocusMetrics(newMetrics);
       setLastModified("Reader Focus Improved");
       
-      console.log("Email body updated to:", improvedEmail.substring(0, 100) + "...");
+      console.log("✅ State updated - emailBody set to improved version");
 
       // Auto-save to database
       const { error: saveError } = await supabase
@@ -783,6 +795,7 @@ ${email.ctas[selectedCta]}`;
           )}
           
           <Textarea
+            key={`email-body-${lastModified}-${emailBody.length}`}
             value={emailBody}
             onChange={(e) => setEmailBody(e.target.value)}
             rows={20}
