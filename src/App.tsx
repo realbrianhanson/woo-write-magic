@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Campaigns from "./pages/Campaigns";
 import CampaignBuilder from "./pages/CampaignBuilder";
 import CampaignDetail from "./pages/CampaignDetail";
 import EmailView from "./pages/EmailView";
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaign/new" element={<CampaignBuilder />} />
           <Route path="/campaign/:id" element={<CampaignDetail />} />
           <Route path="/email/:id" element={<EmailView />} />
