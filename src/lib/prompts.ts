@@ -16,6 +16,7 @@ interface CampaignSettings {
   voiceTone?: string;
   voiceExamples?: string[];
   specificObjections?: string[];
+  marketSophistication?: string;
   differentiation?: {
     unfair_advantage: string;
     vs_competitors: string;
@@ -33,199 +34,222 @@ interface CampaignSettings {
   };
 }
 
-const STORY_STRUCTURES = {
-  mistake: {
-    name: "The Mistake I Made",
-    examples: `
-EXAMPLE 1:
-"Three years ago I made a $47,000 mistake.
+function getMarketSophisticationStrategy(sophistication: string): string {
+  const strategies: Record<string, string> = {
+    virgin: `
+═══════════════════════════════════════════════════════════════
+MARKET STAGE: VIRGIN MARKET (You're First)
+═══════════════════════════════════════════════════════════════
+STRATEGY: Use DIRECT, SIMPLE CLAIMS. Don't overcomplicate.
 
-I hired a 'growth agency' to scale my email list.
+Your audience has never heard this before. Keep it simple:
+- State the benefit clearly
+- Skip complex mechanisms  
+- Simple proof (testimonials, before/after)
+- Don't be fancy
 
-They promised 10,000 subscribers in 90 days. Professional landing pages. Automated funnels. The works.
+HEADLINE: "Lose Weight" or "Make Money Online" or "Learn Spanish"
+Not: "The Revolutionary New Method That..."
 
-What I got: 9,847 fake emails. A 0.3% open rate. And a PayPal dispute.
-
-That's when I learned the one thing that actually builds an engaged list..."
-
-EXAMPLE 2:
-"I launched my course to 2,300 people last month.
-
-Made $412.
-
-Know why?
-
-Because I followed every 'expert's' advice. Perfect sales page. Video testimonials. Early bird pricing.
-
-I forgot the one thing that actually matters: They didn't know me yet.
-
-Here's what I did instead..."
+BODY FOCUS:
+1. What they'll get
+2. Simple proof it works
+3. How to start
+4. Clear CTA
 `,
-  },
-  weird: {
-    name: "The Weird Thing I Noticed",
-    examples: `
-EXAMPLE 1:
-"I was scrolling Instagram at 11pm when I noticed something weird.
 
-Every single course creator I follow posts the same content.
+    early: `
+═══════════════════════════════════════════════════════════════
+MARKET STAGE: EARLY MARKET (1-3 Competitors)
+═══════════════════════════════════════════════════════════════
+STRATEGY: AMPLIFY the claim with specifics and numbers.
 
-'5 tips for...'
-'The secret to...'
-'How I went from X to Y...'
+The claim still works, just needs to be BIGGER:
+- Add specific numbers and timeframes
+- Make measurable promises
+- Use concrete examples
+- Exceed competitor claims
 
-Same format. Same energy. Same boring results.
+HEADLINE: "Lose 47 Pounds in 90 Days" or "Make $10K Your First Month"
+Not just: "Lose Weight" (too generic now)
 
-But one guy? Different.
-
-He posts photos of his messy desk. Rants about stuff that pisses him off. Shares his actual revenue numbers.
-
-And he's doing 6 figures a month.
-
-Here's what he's doing that nobody else is..."
-
-EXAMPLE 2:
-"You ever notice how the best-performing emails are the ugly ones?
-
-No fancy design. No images. Just plain text that looks like your friend wrote it drunk at 2am.
-
-I tested this last week. Sent two versions of the same email.
-
-Version A: Beautiful template. Logo. Formatted perfectly.
-Version B: Plain text. Typo in the subject line. Looked terrible.
-
-Version B got 4x the clicks.
-
-Weird, right?"
+BODY FOCUS:
+1. Amplified promise (bigger, faster, specific)
+2. Numbered proof and metrics
+3. Detailed timeline
+4. Strong social proof
 `,
-  },
-  truth: {
-    name: "The Uncomfortable Truth",
-    examples: `
-EXAMPLE 1:
-"Nobody cares about your product.
 
-I know that stings. But it's true.
+    saturated: `
+═══════════════════════════════════════════════════════════════
+MARKET STAGE: SATURATED MARKET (5-10+ Competitors)
+═══════════════════════════════════════════════════════════════
+STRATEGY: Introduce a NEW MECHANISM. Show HOW it works differently.
 
-They don't care about your features. Your benefits. Your testimonials.
+Claims don't work anymore. Everyone makes them. Show a NEW WAY:
+- Feature your mechanism in the headline
+- Give it a memorable name
+- Explain HOW it's different
+- Show why old methods failed
 
-They care about Thursday at 2pm when their boss asks for the third revision.
+HEADLINE: "The 16:8 Method That Burns Fat While You Sleep"
+Or: "The AI Funnel That Sells For You 24/7"
+Not: "Lose Weight Fast" (burned out claim)
 
-They care about checking their bank account and feeling sick.
+BODY STRUCTURE:
+1. Acknowledge failed attempts with old methods
+2. Explain WHY old methods don't work
+3. Introduce YOUR mechanism (named and explained)
+4. Show HOW it works step-by-step
+5. Mechanism-specific proof
+6. Clear mechanism-based CTA
 
-They care about their kid asking why they work so much.
-
-If your marketing doesn't speak to THAT? You're invisible."
-
-EXAMPLE 2:
-"Your email list doesn't hate you.
-
-They just forgot you exist.
-
-You email them once a month with 'value content' and wonder why they don't buy.
-
-Here's what they're thinking: 'Who is this? Did I sign up for this?'
-
-You need to email MORE, not less. And make every email feel like a text from a friend.
-
-That's it. That's the whole thing."
+Your mechanism must be:
+- Believable (not magical)
+- Different (not just renamed)
+- Specific (not vague)
+- Demonstrable (can show how it works)
 `,
-  },
-  realization: {
-    name: "The 2AM Realization",
-    examples: `
-EXAMPLE 1:
-"It was 2:47am and I couldn't sleep.
 
-I was lying there thinking about the 347 people on my email list who never open my emails.
+    'mechanism-wars': `
+═══════════════════════════════════════════════════════════════
+MARKET STAGE: MECHANISM WARS (Everyone Has Secrets)
+═══════════════════════════════════════════════════════════════
+STRATEGY: Make your mechanism EASIER, FASTER, or MORE PROVEN.
 
-And it hit me.
+Everyone has a mechanism now. Yours must be demonstrably BETTER:
+- Simpler to use
+- Faster results
+- More proven
+- Side-by-side comparison
 
-I was writing to impress other marketers. Not to connect with real people.
+HEADLINE: "Enhanced 16:8 Method - Now 3x Faster Results"
+Or: "AI Funnel 2.0 with Smart Retargeting Built In"
 
-Every email sounded like a TED talk. Professional. Polished. Perfect.
+BODY STRUCTURE:
+1. Acknowledge existing mechanisms
+2. Point out their limitations (specific)
+3. Introduce your IMPROVED mechanism
+4. Show exactly what makes it better
+5. Comparative proof
+6. Simplicity emphasis
 
-And totally forgettable.
-
-The next morning I deleted my entire email sequence and started over.
-
-One simple change doubled my open rates..."
-
-EXAMPLE 2:
-"Last night I was reviewing my sales calls from the past month.
-
-Same objection every time: 'I need to think about it.'
-
-At 1am I realized something.
-
-They weren't saying 'I need to think about it.'
-
-They were saying 'I don't trust you yet.'
-
-Changed my entire approach. Now I'm closing 60% instead of 20%."
+Focus on:
+- Speed improvement
+- Ease improvement  
+- Better results
+- Better experience
 `,
-  },
-  conversation: {
-    name: "The Overheard Conversation",
-    examples: `
-EXAMPLE 1:
-"Last Tuesday I was in line at Starbucks when I overheard two moms talking.
 
-One was almost in tears.
+    dead: `
+═══════════════════════════════════════════════════════════════
+MARKET STAGE: DEAD MARKET (Nothing Works)
+═══════════════════════════════════════════════════════════════
+STRATEGY: Focus on IDENTITY and TRANSFORMATION.
 
-She'd spent $3,000 on Facebook ads for her online course. Got 47 clicks. Zero sales.
+Your market has heard everything. Claims and mechanisms are ignored.
+Make it about WHO THEY BECOME:
+- Focus on identity not product
+- Create tribal language
+- Show the lifestyle
+- Social proof of community
+- Values and beliefs
 
-The other one goes: 'Did you email your list?'
+HEADLINE: "For Entrepreneurs Who Chose Freedom Over Security"
+Or: "Join 10,000 Who Finally Figured It Out"
+Not: Any claim or mechanism (won't work)
 
-'I don't have a list. Nobody tells you how to build one that actually works.'
+BODY STRUCTURE:
+1. Describe the identity (who is this for?)
+2. Paint lifestyle picture
+3. Contrast with "everyone else"
+4. Show community social proof
+5. Invite them to join
+6. Product is almost secondary
 
-I wanted to interrupt and tell her. But I didn't.
-
-Instead, I'm telling you..."
-
-EXAMPLE 2:
-"I was at a coffee shop last week working on my laptop.
-
-Two guys next to me were talking about their startup.
-
-One says: 'We need to go viral.'
-
-The other one: 'Or we could just email the 50 people who actually asked for updates.'
-
-First guy: 'That's not scalable.'
-
-Dude. You have zero revenue. Email the 50 people.
-
-This is the problem with everyone..."
-`,
-  },
-  surprise: {
-    name: "AI Surprise Mode",
-    examples: `
-MIX IT UP. Choose your own story structure based on what fits best.
-
-Could be:
-- A confession ("I'm gonna be honest with you...")
-- A pattern interrupt ("You know that feeling when...")  
-- A personal story (specific moment, real details)
-- An uncomfortable truth ("Nobody wants to hear this but...")
-- A late-night realization ("It was 2am and...")
-- An overheard conversation ("I was at X when I heard...")
-
-Just make it REAL. Make it SPECIFIC. Make them FEEL something.
-
-Start with a hook that drops them into a moment they recognize.
-`,
-  },
-};
+You're selling membership in a tribe, not a product.
+`
+  };
+  return strategies[sophistication] || strategies.saturated;
+}
 
 function getStoryExamples(): string {
-  const storyData = STORY_STRUCTURES.surprise;
-  
   return `
-${storyData.examples}
+═══════════════════════════════════════════════════════════════
+STORY PRINCIPLES (Not Templates - Don't Copy These Examples)
+═══════════════════════════════════════════════════════════════
 
-MATCH THIS ENERGY. This tone. This rhythm. This realness.
+PRINCIPLE 1: SPECIFICITY CREATES BELIEVABILITY
+
+❌ VAGUE: "I made a big mistake last year"
+✅ SPECIFIC: "Three years ago I spent $47,000 on a 'growth agency' that got me 9,847 fake emails"
+
+❌ VAGUE: "Recently I had a realization"
+✅ SPECIFIC: "Tuesday morning, 6:47am, staring at my bank account. That's when it hit me."
+
+The more specific, the more real it feels.
+
+PRINCIPLE 2: RECOGNITION BEFORE EDUCATION
+
+Start with something they already feel/know:
+- "You know that Sunday night feeling when..."
+- "Ever notice how the best emails are the ugly ones?"
+- "You're probably doing what I did for three months..."
+
+Get them nodding "yes, I know that feeling" BEFORE teaching them anything.
+
+PRINCIPLE 3: TENSION BEFORE RESOLUTION
+
+❌ DON'T lead with: "I discovered how to 10x my revenue"
+✅ DO lead with: "I was stuck at $4K a month for eight months. Tried everything. Then last Tuesday..."
+
+Make them feel the pain FIRST. Then offer relief.
+
+HOOK STYLES YOU CAN USE:
+
+1. PERSONAL STORY MOMENT
+   Drop into a specific scene with stakes
+   "It was 2:47am and I couldn't sleep..."
+   "Last Tuesday my client asked me a question I couldn't answer..."
+
+2. PATTERN OBSERVATION
+   Call out something they've noticed
+   "Ever notice how every course creator posts the same content?"
+   "You know that thing where you write the perfect email and nobody responds?"
+
+3. TRUTH BOMB
+   Say what nobody else will
+   "Nobody cares about your product."
+   "Your email list doesn't hate you. They just forgot you exist."
+
+4. CONFESSION
+   Admit something vulnerable
+   "I was writing to impress other marketers. Not to connect with real people."
+   "Here's what I got wrong for three years..."
+
+5. RECOGNITION QUESTION
+   Ask something that makes them think "wait, how did you know?"
+   "Ever spend 3 hours writing one email?"
+   "You know that feeling when you launch and nobody buys?"
+
+6. CONTRAST/SURPRISE
+   Set up expectation then break it
+   "I launched to 2,300 people last month. Made $412."
+   "My ugliest email got 4x the clicks of my beautiful one."
+
+═══════════════════════════════════════════════════════════════
+
+THE KEY: FEEL IT FIRST
+
+Before writing, ask yourself:
+- What emotion am I trying to create?
+- What moment would make them feel that?
+- What specific detail makes it real?
+
+Then write from that feeling, not from a template.
+
+VARIETY MATTERS: 
+Don't use the same hook style every email. Mix it up. Keep them guessing.
 `;
 }
 
@@ -273,7 +297,12 @@ AVOID LIKE POISON:
 THE BANNED WORD LIST (sounds like AI):
 ${BANNED_WORDS.join(", ")}
 
-Also banned: very, extremely, really, probably, maybe, kind of, almost, clearly, truly, simply, literally, actually, definitely, absolutely, completely, totally, utterly, quite, rather, somewhat, fairly, pretty
+Minimize weak qualifiers (don't overuse): very, extremely, quite, rather, somewhat, fairly
+
+NATURAL WORDS YOU CAN USE:
+really, actually, probably, maybe, almost, clearly, simply, literally, definitely, kind of
+
+These aren't AI words - they're how humans talk. Use them naturally.
 
 PROOF THAT FEELS REAL:
 Don't say "347 customers achieved results"
@@ -296,30 +325,107 @@ READING LEVEL: 6th-8th grade
 - Write how people actually talk
 
 RHYTHM & FLOW:
-Mix it up naturally. Use sentence variety to create rhythm:
-- Short punchy statements for emphasis (4-8 words)
-- Medium sentences for storytelling and flow (12-18 words)  
-- Occasional longer sentences to build momentum (20-25 words max)
+Create natural conversational rhythm using sentence variety:
 
-AVOID choppy fragments. Don't write: "Two words. Three words. Four words here."
-INSTEAD write: "Here's what happened. I tested this approach for three weeks and discovered something that completely changed how I think about email marketing."
+✅ SHORT (5-10 words): Emphasize key points. Make it stick. Create urgency.
+✅ MEDIUM (12-20 words): Most of your writing should flow naturally at this comfortable reading length for easy comprehension.
+✅ LONGER (20-30 words): Build momentum and paint vivid pictures when you need to really draw them into a scene or explain something important.
+✅ FRAGMENTS (2-4 words): For dramatic impact. Strategic emphasis. Use sparingly.
 
-Use natural pauses and connectors:
-"You're tired of trying things that don't work. You've spent months testing different strategies. And you're still not seeing the results you need."
+❌ DON'T DO THIS (mechanical pattern):
+"Short sentence. Another short one. And another. One more."
+
+✅ DO THIS INSTEAD (natural rhythm):
+"Here's what happened. I spent three weeks testing different approaches, trying everything the experts recommended. Nothing worked. Then I tried something nobody talks about. Changed everything."
+
+Think: How would you explain this over coffee? Write that.
+
+PERSONALITY THROUGH PUNCTUATION:
+- Ellipses (...) for trailing thoughts or suspense
+- Em dashes (—) for conversational asides  
+- Rhetorical questions to engage reader
+- Parenthetical comments for personality
+
+Example WITHOUT personality:
+"I tested this approach and it worked well."
+
+Example WITH personality:
+"I tested this approach... and holy shit, it worked way better than I expected."
+
+═══════════════════════════════════════════════════════════════
+PROVEN EMAIL STRUCTURE - Follow This Flow:
+═══════════════════════════════════════════════════════════════
+
+1. HOOK (1-2 paragraphs)
+   Start with one of these:
+   - Specific moment: "Last Tuesday at 2:47pm..."
+   - Direct question: "Know why most emails fail?"
+   - Bold claim: "I'm going to tell you something nobody else will"
+   - Observation: "Ever notice how..."
+
+2. STORY/EXAMPLE (3-5 paragraphs)
+   Tell something SPECIFIC:
+   - Personal experience with real details
+   - Customer situation (names, numbers, specifics)
+   - Something you observed
+   
+   Make it feel like you're telling a friend over coffee.
+
+3. LESSON/INSIGHT (2-4 paragraphs)
+   Extract the principle:
+   - "Here's why this matters..."
+   - "The lesson?"
+   - Connect story to their business/life
+   - Make it actionable
+
+4. BRIDGE TO OFFER (1-2 paragraphs)
+   Natural transition:
+   - "If you want to go deeper on this..."
+   - "This is exactly what I cover in..."
+   - NO apology for selling
+   - Make it feel like the next logical step
+
+5. SOFT CTA (1 paragraph)
+   Keep it low-pressure:
+   - Clear next step
+   - Link or action
+   - Brief close
+   
+   Instead of: "BUY NOW! LIMITED TIME!"
+   Use: "If this interests you, here's where to learn more: [link]"
+
+═══════════════════════════════════════════════════════════════
+
+CRITICAL RULES:
+- Stories BEFORE lessons (not the other way around)
+- Entertainment BEFORE education
+- Value BEFORE pitch
+- Don't skip the story - that's where engagement happens
+
+PARAGRAPH LENGTH:
+- Target: 1-3 sentences per paragraph
+- Maximum: 4 sentences (rare, for complex ideas)
+- Use single-sentence paragraphs for emphasis
+- Line breaks are your friend
+
+Example of GOOD formatting:
+"Here's what I learned.
+
+Three years ago I tried this approach. Failed miserably. Lost $12,000.
+
+Know why?
+
+I was doing what everyone else said to do. Following the 'experts.'
+
+Bad idea."
+
+Example of BAD formatting (same content, worse):
+"Here's what I learned. Three years ago I tried this approach and failed miserably and lost $12,000. Know why? I was doing what everyone else said to do and following the experts which was a bad idea."
 
 ALWAYS END WITH P.S.:
 Make it about the benefit + urgency + action
 
 "P.S. Sarah went from $4K to $15K in 6 weeks using this. But the early access deal ends Friday. Click here before it's gone."
-
-STRUCTURE (but hide it, make it feel natural):
-1. Hook with a story moment (use the examples above)
-2. Make it about THEIR situation, not your product
-3. Show the pain (specific, visual, emotional)
-4. Tease the solution (don't reveal everything)
-5. Social proof that feels real
-6. Clear action step
-7. P.S. with urgency
 
 NO ONE SHOULD RECOGNIZE THIS AS MARKETING.
 It should feel like a friend sharing something that changed their life.
@@ -331,6 +437,9 @@ export function buildEmailPrompt(
   totalEmails: number = 1,
   simplify: boolean = false
 ): string {
+  // Add market sophistication strategy at the very start
+  const sophisticationStrategy = getMarketSophisticationStrategy(settings.marketSophistication || 'saturated');
+  
   const simplificationRules = simplify
     ? `
 MAKE IT EVEN SIMPLER:
@@ -462,6 +571,8 @@ CRITICAL: Reference what came before. Build on the narrative arc.
     : '';
 
   return `You're writing 3 DIFFERENT VERSIONS of a high-converting email. Each version uses a different strategic approach.
+
+${sophisticationStrategy}
 
 CAMPAIGN CONTEXT:
 Email ${emailNumber} of ${totalEmails} - ${settings.campaignType}

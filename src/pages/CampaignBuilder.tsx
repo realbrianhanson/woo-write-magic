@@ -19,6 +19,7 @@ import { DifferentiationInput } from "@/components/DifferentiationInput";
 import { TransformationTimelineInput } from "@/components/TransformationTimelineInput";
 import { FunnelContextInput } from "@/components/FunnelContextInput";
 import { UrlContentPreview } from "@/components/UrlContentPreview";
+import { MarketSophisticationInput } from "@/components/MarketSophisticationInput";
 
 export default function CampaignBuilder() {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ export default function CampaignBuilder() {
     voiceTone: "casual-friend",
     voiceExamples: [] as string[],
     specificObjections: [] as string[],
+    marketSophistication: "saturated" as string,
     differentiation: {
       unfair_advantage: "",
       vs_competitors: "",
@@ -114,6 +116,7 @@ export default function CampaignBuilder() {
           voiceTone: campaign.voice_tone || settings.voiceTone || "casual-friend",
           voiceExamples: campaign.voice_examples || settings.voiceExamples || [],
           specificObjections: campaign.specific_objections || settings.specificObjections || [],
+          marketSophistication: settings.marketSophistication || "saturated",
           differentiation: (campaign.differentiation || settings.differentiation || {
             unfair_advantage: "",
             vs_competitors: "",
@@ -273,6 +276,7 @@ export default function CampaignBuilder() {
           voiceTone: formData.voiceTone,
           voiceExamples: formData.voiceExamples,
           specificObjections: formData.specificObjections,
+          marketSophistication: formData.marketSophistication,
           differentiation: formData.differentiation,
           transformationTimeline: formData.transformationTimeline,
           funnelContext: formData.funnelContext,
@@ -533,6 +537,14 @@ export default function CampaignBuilder() {
                 <Label htmlFor="greed">Greed & Opportunity</Label>
               </div>
             </RadioGroup>
+          </div>
+
+          {/* Market Sophistication */}
+          <div className="bg-card p-6 rounded-lg border">
+            <MarketSophisticationInput
+              value={formData.marketSophistication}
+              onChange={(value) => setFormData({ ...formData, marketSophistication: value })}
+            />
           </div>
 
           {/* Voice & Tone */}

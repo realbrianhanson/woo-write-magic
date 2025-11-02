@@ -31,8 +31,6 @@ export const BANNED_WORDS = [
   "Palpable",
   "Hustle and bustle",
   "Realm",
-  "Journey",
-  "Navigate",
   "Supercharge",
   "Tailored",
   "Elegant",
