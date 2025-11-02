@@ -123,6 +123,10 @@ serve(async (req) => {
       .replace(/\d+%\d+%\d+%\d+%\d+%.*/g, '')
       // Remove "How customer reviews and ratings work"
       .replace(/How customer reviews and ratings work/gi, '')
+      // Remove "Select to learn more" sections
+      .replace(/Select to learn more[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '')
+      // Remove customer mention statistics (e.g., "84 customers mention...")
+      .replace(/\d+\s+customers?\s+mention\s+"[^"]+"\d+\s+positive\d+\s+negative/gi, '')
       // Remove markdown horizontal rules (*** or * * *)
       .replace(/^\s*\*\s*\*\s*\*\s*$/gm, '')
       .replace(/^[-*_]{3,}\s*$/gm, '')
