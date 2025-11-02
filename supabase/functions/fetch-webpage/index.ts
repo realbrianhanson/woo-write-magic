@@ -123,6 +123,11 @@ serve(async (req) => {
       .replace(/\d+%\d+%\d+%\d+%\d+%.*/g, '')
       // Remove "How customer reviews and ratings work"
       .replace(/How customer reviews and ratings work/gi, '')
+      // Remove markdown horizontal rules (*** or * * *)
+      .replace(/^\s*\*\s*\*\s*\*\s*$/gm, '')
+      .replace(/^[-*_]{3,}\s*$/gm, '')
+      // Remove markdown heading markers (### ## #)
+      .replace(/^#{1,6}\s+/gm, '')
       // Remove multiple blank lines
       .replace(/\n{3,}/g, '\n\n')
       // Remove common navigation patterns
