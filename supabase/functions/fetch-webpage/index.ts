@@ -32,7 +32,7 @@ serve(async (req) => {
 
     console.log('Scraping webpage with Firecrawl:', url);
 
-    // Call Firecrawl API directly
+    // Call Firecrawl API directly with content filtering
     const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -41,7 +41,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         url: url,
-        formats: ['markdown', 'html']
+        formats: ['markdown'],
+        onlyMainContent: true,
+        excludeTags: ['nav', 'header', 'footer', 'aside', 'script', 'style', 'iframe'],
+        waitFor: 1000
       })
     });
 
@@ -57,8 +60,8 @@ serve(async (req) => {
       throw new Error('Failed to scrape webpage with Firecrawl');
     }
 
-    // Extract markdown content (preferred) or fallback to HTML
-    let content = scrapeResult.data?.markdown || scrapeResult.data?.html || '';
+    // Extract markdown content only (cleaner for copywriting)
+    let content = scrapeResult.data?.markdown || '';
     
     // Limit to reasonable length (first 10000 characters for better quality)
     if (content.length > 10000) {

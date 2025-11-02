@@ -19,6 +19,7 @@ import { DifferentiationInput } from "@/components/DifferentiationInput";
 import { TransformationTimelineInput } from "@/components/TransformationTimelineInput";
 import { FunnelContextInput } from "@/components/FunnelContextInput";
 import { UrlContentPreview } from "@/components/UrlContentPreview";
+import { ExternalLink } from "lucide-react";
 import { MarketSophisticationInput } from "@/components/MarketSophisticationInput";
 
 export default function CampaignBuilder() {
@@ -38,6 +39,7 @@ export default function CampaignBuilder() {
   const [formData, setFormData] = useState({
     productName: "",
     description: "",
+    productUrl: "",
     price: "",
     audience: "",
     painPoint: "",
@@ -103,6 +105,7 @@ export default function CampaignBuilder() {
         setFormData({
           productName: campaign.name || settings.productName || "",
           description: settings.description || "",
+          productUrl: settings.productUrl || "",
           price: settings.price || "",
           audience: settings.audience || "",
           painPoint: settings.painPoint || "",
@@ -151,54 +154,42 @@ export default function CampaignBuilder() {
     }
   };
 
-  // Detect and fetch URL content
-  const handleDescriptionChange = async (value: string) => {
-    // Check if the value contains a URL (more flexible pattern)
-    const urlPattern = /https?:\/\/[^\s]+/;
-    const urlMatch = value.trim().match(urlPattern);
-    
-    if (urlMatch) {
-      const url = urlMatch[0];
-      setIsFetchingUrl(true);
-      try {
-        console.log('Detected URL, fetching content:', url);
-        const { data, error } = await supabase.functions.invoke('fetch-webpage', {
-          body: { url }
+  const handleFetchUrl = async () => {
+    if (!formData.productUrl) {
+      toast({
+        title: "URL Required",
+        description: "Please enter a product URL first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFetchingUrl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-webpage', {
+        body: { url: formData.productUrl }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setUrlPreview({
+          url: formData.productUrl,
+          content: data.content,
+          metadata: data.metadata
         });
-
-        console.log('Fetch webpage response:', data, error);
-
-        if (error) throw error;
-
-        if (data?.success && data?.content) {
-          // Show preview dialog instead of directly updating
-          setUrlPreview({
-            url,
-            content: data.content,
-            metadata: data.metadata,
-          });
-          toast({
-            title: "Page content fetched!",
-            description: "Review the extracted content before using it.",
-          });
-        } else {
-          throw new Error('No content returned from webpage');
-        }
-      } catch (error: any) {
-        console.error('Error fetching URL:', error);
-        toast({
-          title: "Couldn't fetch page",
-          description: error.message || "Using the URL as-is. You can paste the page content directly instead.",
-          variant: "destructive",
-        });
-        // Keep the URL in the field if fetch fails
-        setFormData({ ...formData, description: value });
-      } finally {
-        setIsFetchingUrl(false);
+      } else {
+        throw new Error(data.error || 'Failed to fetch URL');
       }
-    } else {
-      // No URL detected, just update the description normally
-      setFormData({ ...formData, description: value });
+    } catch (error) {
+      console.error('Error fetching URL:', error);
+      toast({
+        title: "Fetch Failed",
+        description: error instanceof Error ? error.message : "Failed to fetch webpage content",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingUrl(false);
     }
   };
 
@@ -206,12 +197,15 @@ export default function CampaignBuilder() {
     if (urlPreview) {
       setFormData({ ...formData, description: urlPreview.content });
       setUrlPreview(null);
+      toast({
+        title: "Content Added",
+        description: "Webpage content has been added to product description",
+      });
     }
   };
 
   const handleCancelUrlContent = () => {
     setUrlPreview(null);
-    setFormData({ ...formData, description: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -430,22 +424,53 @@ export default function CampaignBuilder() {
             </div>
 
             <div>
-              <Label htmlFor="description">Description or URL</Label>
+              <Label htmlFor="productUrl">Product Landing Page URL (Optional)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="productUrl"
+                  type="url"
+                  value={formData.productUrl}
+                  onChange={(e) =>
+                    setFormData({ ...formData, productUrl: e.target.value })
+                  }
+                  placeholder="https://yoursite.com/product"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleFetchUrl}
+                  disabled={isFetchingUrl || !formData.productUrl}
+                >
+                  {isFetchingUrl ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Fetching...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Fetch
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Automatically extract main content from your landing page
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Product Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleDescriptionChange(e.target.value)}
-                placeholder="Describe your product or paste a sales page URL..."
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Describe your product, key benefits, features, etc."
                 rows={4}
                 required
-                disabled={isFetchingUrl}
               />
-              {isFetchingUrl && (
-                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Fetching page content...
-                </p>
-              )}
             </div>
 
             <div>
