@@ -26,12 +26,12 @@ Deno.serve(async (req) => {
       );
     }
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
+    if (!ANTHROPIC_API_KEY) {
+      console.error("ANTHROPIC_API_KEY is not configured");
       return new Response(
-        JSON.stringify({ error: "AI service not configured - LOVABLE_API_KEY missing" }),
+        JSON.stringify({ error: "AI service not configured - ANTHROPIC_API_KEY missing" }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -39,30 +39,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("Calling AI gateway...");
+    console.log("Calling Anthropic API...");
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 180000); // 3 minute timeout for GPT-5
+    const timeout = setTimeout(() => controller.abort(), 180000); // 3 minute timeout
 
     const requestBody = {
-      model: "openai/gpt-5",
+      model: "claude-sonnet-4-5",
+      max_tokens: 8000,
       messages: [
         {
-          role: "system",
-          content:
-            "You are an expert direct response copywriter. Always return valid JSON only, no markdown formatting.",
+          role: "user",
+          content: `You are an expert direct response copywriter. Always return valid JSON only, no markdown formatting.\n\n${prompt}`,
         },
-        { role: "user", content: prompt },
       ],
     };
     
     console.log("Request body:", JSON.stringify(requestBody).substring(0, 300));
     
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "https://api.anthropic.com/v1/messages",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
@@ -72,25 +72,26 @@ Deno.serve(async (req) => {
 
     clearTimeout(timeout);
     
-    console.log("AI gateway response status:", response.status);
-    console.log("AI gateway response ok:", response.ok);
+    console.log("Anthropic API response status:", response.status);
+    console.log("Anthropic API response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI gateway error (gpt-5):", response.status, errorText);
+      console.error("Anthropic API error (claude-sonnet-4-5):", response.status, errorText);
 
-      // Fallback to gpt-5-mini on server/gateway errors
-      const retriable = [500, 502, 503, 504].includes(response.status);
+      // Fallback to haiku on server errors
+      const retriable = [500, 502, 503, 504, 529].includes(response.status);
       if (retriable) {
         try {
-          console.log("Retrying with openai/gpt-5-mini...");
-          const fallbackBody = { ...requestBody, model: "openai/gpt-5-mini" };
+          console.log("Retrying with claude-3-5-haiku...");
+          const fallbackBody = { ...requestBody, model: "claude-3-5-haiku-20241022" };
           const fallbackResp = await fetch(
-            "https://ai.gateway.lovable.dev/v1/chat/completions",
+            "https://api.anthropic.com/v1/messages",
             {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json",
               },
               body: JSON.stringify(fallbackBody),
@@ -101,11 +102,11 @@ Deno.serve(async (req) => {
           if (fallbackResp.ok) {
             const data = await fallbackResp.json();
             console.log("Fallback model succeeded");
-            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            if (!data.content || !data.content[0] || !data.content[0].text) {
               console.error("Invalid fallback response structure:", data);
               return new Response(JSON.stringify({ error: "Invalid AI response structure (fallback)" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
             }
-            let generatedText = data.choices[0].message.content?.trim() ?? "";
+            let generatedText = data.content[0].text.trim();
             if (generatedText.startsWith("```json")) generatedText = generatedText.replace(/^```json\n/, "").replace(/\n```$/, "");
             else if (generatedText.startsWith("```")) generatedText = generatedText.replace(/^```\n/, "").replace(/\n```$/, "");
             return new Response(JSON.stringify({ generatedText }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -120,7 +121,7 @@ Deno.serve(async (req) => {
 
       return new Response(
         JSON.stringify({ 
-          error: `AI gateway error: ${response.status}`,
+          error: `Anthropic API error: ${response.status}`,
           details: errorText
         }),
         {
@@ -130,16 +131,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("AI gateway response received, status:", response.status);
+    console.log("Anthropic API response received, status:", response.status);
     const data = await response.json();
     console.log("Response data:", JSON.stringify(data).substring(0, 200));
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    if (!data.content || !data.content[0] || !data.content[0].text) {
       console.error("Invalid response structure:", data);
       throw new Error("Invalid AI response structure");
     }
     
-    let generatedText = data.choices[0].message.content;
+    let generatedText = data.content[0].text;
 
     // Strip markdown code fences if present
     generatedText = generatedText.trim();
