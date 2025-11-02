@@ -48,7 +48,7 @@ export const UrlContentPreview = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>URL Content Preview</DialogTitle>
           <DialogDescription>
@@ -90,7 +90,7 @@ export const UrlContentPreview = ({
             <Textarea
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
-              className="flex-1 min-h-[300px] font-mono text-sm resize-none"
+              className="flex-1 min-h-[400px] max-h-[600px] font-mono text-sm overflow-y-auto"
               placeholder="Edit the extracted content..."
             />
           </div>
