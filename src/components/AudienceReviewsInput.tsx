@@ -3,19 +3,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Upload, X, FileText, MessageSquare, ThumbsUp, ThumbsDown, Loader2, Link as LinkIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Upload, X, FileText, MessageSquare, ThumbsUp, ThumbsDown, Loader2, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { UrlContentPreview } from "./UrlContentPreview";
 
 interface AudienceReviewsInputProps {
   value: string;
   onChange: (value: string) => void;
+  url?: string;
+  onUrlChange?: (url: string) => void;
 }
 
-export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputProps) {
+export function AudienceReviewsInput({ value, onChange, url = "", onUrlChange }: AudienceReviewsInputProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const [urlPreview, setUrlPreview] = useState<{
+    url: string;
+    content: string;
+    metadata?: { title?: string; description?: string };
+  } | null>(null);
   const { toast } = useToast();
 
   const handleFileUpload = async (files: FileList | null) => {
@@ -58,59 +67,58 @@ export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputPr
     onChange("");
   };
 
-  const handleTextChange = async (newValue: string) => {
-    onChange(newValue);
-
-    // Check if the value contains URLs (one per line or comma-separated)
-    const lines = newValue.split(/[\n,]/).map(line => line.trim()).filter(line => line);
-    const urlPattern = /^https?:\/\/[^\s]+$/;
-    const urls = lines.filter(line => urlPattern.test(line));
-
-    if (urls.length > 0) {
-      setIsFetchingUrl(true);
-      try {
-        toast({
-          title: `Fetching ${urls.length} review page${urls.length > 1 ? 's' : ''}...`,
-          description: "This may take a moment",
-        });
-
-        const fetchPromises = urls.map(url => 
-          supabase.functions.invoke('fetch-webpage', {
-            body: { url }
-          })
-        );
-
-        const results = await Promise.all(fetchPromises);
-        
-        const successfulContent = results
-          .filter(result => !result.error && result.data?.success)
-          .map(result => result.data.content)
-          .join('\n\n---\n\n');
-
-        const failedCount = results.filter(result => result.error || !result.data?.success).length;
-
-        if (successfulContent) {
-          onChange(successfulContent);
-          toast({
-            title: `${urls.length - failedCount} page${urls.length - failedCount > 1 ? 's' : ''} fetched!`,
-            description: failedCount > 0 
-              ? `${failedCount} URL${failedCount > 1 ? 's' : ''} failed to fetch`
-              : "Customer reviews have been extracted from all pages.",
-          });
-        } else {
-          throw new Error("Failed to fetch any pages");
-        }
-      } catch (error: any) {
-        console.error('Error fetching URLs:', error);
-        toast({
-          title: "Couldn't fetch pages",
-          description: "You can paste the review text directly instead.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsFetchingUrl(false);
-      }
+  const handleFetchUrl = async () => {
+    if (!url.trim()) {
+      toast({
+        title: "No URL provided",
+        description: "Please enter a review page URL first.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    setIsFetchingUrl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-webpage', {
+        body: { url: url.trim() }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setUrlPreview({
+          url: url.trim(),
+          content: data.content,
+          metadata: data.metadata
+        });
+      } else {
+        throw new Error(data?.error || 'Failed to fetch webpage');
+      }
+    } catch (error: any) {
+      console.error('Error fetching URL:', error);
+      toast({
+        title: "Failed to fetch URL",
+        description: error.message || "Please check the URL and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingUrl(false);
+    }
+  };
+
+  const handleApproveUrlContent = () => {
+    if (urlPreview) {
+      onChange(value ? `${value}\n\n---\n\n${urlPreview.content}` : urlPreview.content);
+      toast({
+        title: "Content added!",
+        description: "Review page content has been added to your campaign.",
+      });
+      setUrlPreview(null);
+    }
+  };
+
+  const handleCancelUrlContent = () => {
+    setUrlPreview(null);
   };
 
   return (
@@ -178,27 +186,58 @@ export function AudienceReviewsInput({ value, onChange }: AudienceReviewsInputPr
           </p>
         </div>
 
+        {/* URL Fetch Section */}
+        <div className="space-y-3">
+          <Label htmlFor="reviews-url" className="text-sm font-medium">
+            Review Page URL
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Paste a link to a review page (Amazon, Trustpilot, G2, etc.)
+          </p>
+          <div className="flex gap-2">
+            <Input
+              id="reviews-url"
+              type="url"
+              value={url}
+              onChange={(e) => onUrlChange?.(e.target.value)}
+              placeholder="https://www.amazon.com/product-reviews/..."
+              className="flex-1"
+              disabled={isFetchingUrl}
+            />
+            <Button
+              type="button"
+              onClick={handleFetchUrl}
+              disabled={isFetchingUrl || !url.trim()}
+              variant="secondary"
+            >
+              {isFetchingUrl ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Fetching...
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Fetch
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
         {/* Text Paste Area */}
         <div>
-          <Label htmlFor="reviews-text" className="text-sm font-medium flex items-center gap-2">
-            Paste customer reviews, feedback, or review page URLs
-            <LinkIcon className="h-3 w-3 text-muted-foreground" />
+          <Label htmlFor="reviews-text" className="text-sm font-medium">
+            Customer Reviews & Feedback
           </Label>
           <p className="text-xs text-muted-foreground mb-2">
-            Paste multiple URLs (one per line) to fetch reviews from multiple pages
+            Or paste review text directly here
           </p>
           <Textarea
             id="reviews-text"
             value={value}
-            onChange={(e) => handleTextChange(e.target.value)}
-            placeholder="Paste customer reviews, testimonials, feedback, or URLs to review pages (one per line)...
-
-Examples:
-https://www.amazon.com/product-reviews/...
-https://www.trustpilot.com/review/...
-https://www.g2.com/products/...
-
-Or paste text directly:
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Paste customer reviews, testimonials, or feedback...
 
 WHAT THEY LIKE:
 - 'Finally something that actually works!'
@@ -216,14 +255,7 @@ PAIN POINTS MENTIONED:
 - 'Before this I tried 5 different tools and...'
 "
             className="mt-2 min-h-[250px] font-mono text-sm"
-            disabled={isFetchingUrl}
           />
-          {isFetchingUrl && (
-            <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Fetching reviews from URL...
-            </p>
-          )}
           {value && (
             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
               <span>{value.split(/\s+/).length} words</span>
@@ -255,6 +287,16 @@ PAIN POINTS MENTIONED:
           </ul>
         </div>
       </CardContent>
+
+      <UrlContentPreview
+        open={!!urlPreview}
+        onOpenChange={(open) => !open && setUrlPreview(null)}
+        url={urlPreview?.url || ""}
+        content={urlPreview?.content || ""}
+        metadata={urlPreview?.metadata}
+        onApprove={handleApproveUrlContent}
+        onCancel={handleCancelUrlContent}
+      />
     </Card>
   );
 }

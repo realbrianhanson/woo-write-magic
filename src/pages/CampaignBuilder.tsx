@@ -50,6 +50,7 @@ export default function CampaignBuilder() {
     useUniqueMechanism: true,
     competitorCopy: "",
     audienceReviews: "",
+    audienceReviewsUrl: "",
     voiceTone: "casual-friend",
     voiceExamples: [] as string[],
     specificObjections: [] as string[],
@@ -116,6 +117,7 @@ export default function CampaignBuilder() {
           useUniqueMechanism: settings.useUniqueMechanism ?? true,
           competitorCopy: settings.competitorCopy || "",
           audienceReviews: settings.audienceReviews || "",
+          audienceReviewsUrl: settings.audienceReviewsUrl || "",
           voiceTone: campaign.voice_tone || settings.voiceTone || "casual-friend",
           voiceExamples: campaign.voice_examples || settings.voiceExamples || [],
           specificObjections: campaign.specific_objections || settings.specificObjections || [],
@@ -614,6 +616,8 @@ export default function CampaignBuilder() {
           <AudienceReviewsInput
             value={formData.audienceReviews}
             onChange={(value) => setFormData({ ...formData, audienceReviews: value })}
+            url={formData.audienceReviewsUrl}
+            onUrlChange={(url) => setFormData({ ...formData, audienceReviewsUrl: url })}
           />
 
           {/* Advanced Section */}
