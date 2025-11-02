@@ -32,6 +32,10 @@ interface CampaignSettings {
     funnel_stage: string;
     sequence_position_context: string;
   };
+  personalStories?: string;
+  customerStories?: string;
+  controversialOpinions?: string;
+  originStory?: string;
 }
 
 function getMarketSophisticationStrategy(sophistication: string): string {
@@ -173,83 +177,132 @@ You're selling membership in a tribe, not a product.
   return strategies[sophistication] || strategies.saturated;
 }
 
+function buildPersonalStoryContext(settings: CampaignSettings): string {
+  const hasStories = settings.personalStories || settings.customerStories || 
+                     settings.controversialOpinions || settings.originStory;
+  
+  if (!hasStories) {
+    return `
+═══════════════════════════════════════════════════════════════
+STORY CREATION GUIDANCE
+═══════════════════════════════════════════════════════════════
+
+No personal stories provided. CREATE hyper-specific stories:
+
+MANDATORY RULES:
+✅ Use specific days/times (Tuesday, 2:47am, last week)
+✅ Use specific numbers ($47,000, 847 emails, 6 weeks)
+✅ Use specific names (Sarah from Austin, Mike)
+✅ Use specific locations (Starbucks, kitchen table)
+✅ Include direct quotes
+✅ Describe emotions
+
+❌ NEVER use:
+- "I once had a client who..."
+- "Many people struggle with..."
+- "Imagine if you could..."
+
+✅ ALWAYS be specific:
+- "Last Tuesday Sarah from Austin texted me at 2:47am..."
+- "Three years ago I spent $47,000 on..."
+- "My customer Mike hit $24K in 6 weeks..."
+
+Specificity = Believability = Connection.
+`;
+  }
+
+  return `
+═══════════════════════════════════════════════════════════════
+PERSONAL STORY BANK - USE THESE REAL STORIES
+═══════════════════════════════════════════════════════════════
+
+${settings.personalStories ? `
+━━━ PERSONAL EXPERIENCES ━━━
+${settings.personalStories}
+
+🔴 CRITICAL: Use these ACTUAL stories. Don't make up new ones.
+Reference the real people, situations, numbers, and moments described.
+` : ''}
+
+${settings.customerStories ? `
+━━━ CUSTOMER SUCCESS STORIES ━━━
+${settings.customerStories}
+
+🔴 CRITICAL: Use these REAL customer examples with actual names, numbers, quotes.
+Don't create generic "a customer once..." stories.
+` : ''}
+
+${settings.controversialOpinions ? `
+━━━ YOUR CONTROVERSIAL OPINIONS ━━━
+${settings.controversialOpinions}
+
+🔴 CRITICAL: These are ACTUAL beliefs. Use them for unique voice.
+Don't water them down. This is what makes you different.
+` : ''}
+
+${settings.originStory ? `
+━━━ YOUR ORIGIN STORY ━━━
+${settings.originStory}
+
+🔴 CRITICAL: This is the REAL story. Use it for connection.
+` : ''}
+
+═══════════════════════════════════════════════════════════════
+
+HOW TO USE THE STORY BANK:
+
+1. HOOK: Pull from personal experiences or customer stories
+2. PROOF: Use actual customer results with names/numbers
+3. CREDIBILITY: Reference controversial opinions
+4. CONNECTION: Use origin story when relevant
+
+These stories make copy feel PERSONAL. They're real moments from a real business.
+USE THEM. That's what makes AI sound human.
+`;
+}
+
 function getStoryExamples(): string {
   return `
 ═══════════════════════════════════════════════════════════════
-STORY PRINCIPLES (Not Templates - Don't Copy These Examples)
+STORY PRINCIPLES
 ═══════════════════════════════════════════════════════════════
+
+🔴 CRITICAL: If stories were provided in Story Bank above, USE THEM.
+Don't make up new stories when real ones are available.
 
 PRINCIPLE 1: SPECIFICITY CREATES BELIEVABILITY
 
-❌ VAGUE: "I made a big mistake last year"
-✅ SPECIFIC: "Three years ago I spent $47,000 on a 'growth agency' that got me 9,847 fake emails"
+❌ VAGUE: "I made a mistake last year"
+✅ SPECIFIC: "Three years ago I spent $47,000 on a growth agency that got me 9,847 fake emails"
 
-❌ VAGUE: "Recently I had a realization"
-✅ SPECIFIC: "Tuesday morning, 6:47am, staring at my bank account. That's when it hit me."
-
-The more specific, the more real it feels.
+❌ VAGUE: "A customer had great results"  
+✅ SPECIFIC: "Sarah from Austin went from $4K to $15K in 6 weeks. She texted me at 11pm: Holy shit, I just closed 3 clients."
 
 PRINCIPLE 2: RECOGNITION BEFORE EDUCATION
 
-Start with something they already feel/know:
+Start with something they already feel:
 - "You know that Sunday night feeling when..."
-- "Ever notice how the best emails are the ugly ones?"
-- "You're probably doing what I did for three months..."
-
-Get them nodding "yes, I know that feeling" BEFORE teaching them anything.
+- "Ever notice how the best emails are ugly?"
+- "You're probably doing what I did..."
 
 PRINCIPLE 3: TENSION BEFORE RESOLUTION
 
-❌ DON'T lead with: "I discovered how to 10x my revenue"
-✅ DO lead with: "I was stuck at $4K a month for eight months. Tried everything. Then last Tuesday..."
+❌ DON'T: "I discovered how to 10x revenue"
+✅ DO: "I was stuck at $4K for 8 months. Tried everything. Then last Tuesday..."
 
-Make them feel the pain FIRST. Then offer relief.
+HOOK STYLES:
 
-HOOK STYLES YOU CAN USE:
+1. Personal Story Moment: "It was 2:47am and I couldn't sleep..."
+2. Pattern Observation: "Ever notice how..."
+3. Truth Bomb: "Nobody cares about your product..."
+4. Confession: "Here's my $47K mistake..."
+5. Recognition Question: "Ever spend 3 hours on one email?"
+6. Contrast/Surprise: "I launched to 2,300 people. Made $412."
 
-1. PERSONAL STORY MOMENT
-   Drop into a specific scene with stakes
-   "It was 2:47am and I couldn't sleep..."
-   "Last Tuesday my client asked me a question I couldn't answer..."
+VARIETY MATTERS: Mix up hook styles and stories.
 
-2. PATTERN OBSERVATION
-   Call out something they've noticed
-   "Ever notice how every course creator posts the same content?"
-   "You know that thing where you write the perfect email and nobody responds?"
-
-3. TRUTH BOMB
-   Say what nobody else will
-   "Nobody cares about your product."
-   "Your email list doesn't hate you. They just forgot you exist."
-
-4. CONFESSION
-   Admit something vulnerable
-   "I was writing to impress other marketers. Not to connect with real people."
-   "Here's what I got wrong for three years..."
-
-5. RECOGNITION QUESTION
-   Ask something that makes them think "wait, how did you know?"
-   "Ever spend 3 hours writing one email?"
-   "You know that feeling when you launch and nobody buys?"
-
-6. CONTRAST/SURPRISE
-   Set up expectation then break it
-   "I launched to 2,300 people last month. Made $412."
-   "My ugliest email got 4x the clicks of my beautiful one."
-
-═══════════════════════════════════════════════════════════════
-
-THE KEY: FEEL IT FIRST
-
-Before writing, ask yourself:
-- What emotion am I trying to create?
-- What moment would make them feel that?
-- What specific detail makes it real?
-
-Then write from that feeling, not from a template.
-
-VARIETY MATTERS: 
-Don't use the same hook style every email. Mix it up. Keep them guessing.
+But ALWAYS use real stories from Story Bank when available.
+That's what makes AI sound human.
 `;
 }
 
@@ -440,6 +493,9 @@ export function buildEmailPrompt(
   // Add market sophistication strategy at the very start
   const sophisticationStrategy = getMarketSophisticationStrategy(settings.marketSophistication || 'saturated');
   
+  // Add personal story context
+  const personalStoryContext = buildPersonalStoryContext(settings);
+  
   const simplificationRules = simplify
     ? `
 MAKE IT EVEN SIMPLER:
@@ -593,6 +649,8 @@ Price: $${settings.price}
 EMOTIONAL STATE TO TAP:
 ${settings.primaryEmotion}
 
+${personalStoryContext}
+
 ${voiceContext}
 
 ${objectionsContext}
@@ -736,5 +794,11 @@ Remember:
 - 10 subject lines categorized by type
 - Pre-send critique with specific feedback
 - Testing recommendations based on the variants
-- Write like a human. Sound like a text message. Make them feel something.`;
+- Write like a human. Sound like a text message. Make them feel something.
+
+🔴 FINAL REMINDER: 
+If personal stories, customer stories, or opinions were provided in the Story Bank - USE THEM.
+Don't make up generic examples when you have real ones.
+The Story Bank is what makes this copy sound human instead of robotic.
+Real stories = Real connection = Real results.`;
 }

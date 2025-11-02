@@ -21,6 +21,7 @@ import { FunnelContextInput } from "@/components/FunnelContextInput";
 import { UrlContentPreview } from "@/components/UrlContentPreview";
 import { ExternalLink } from "lucide-react";
 import { MarketSophisticationInput } from "@/components/MarketSophisticationInput";
+import { PersonalStoryInput } from "@/components/PersonalStoryInput";
 
 export default function CampaignBuilder() {
   const navigate = useNavigate();
@@ -70,6 +71,10 @@ export default function CampaignBuilder() {
       funnel_stage: "consideration",
       sequence_position_context: "",
     },
+    personalStories: "",
+    customerStories: "",
+    controversialOpinions: "",
+    originStory: "",
   });
 
   // Load existing campaign if campaignId is provided
@@ -137,6 +142,10 @@ export default function CampaignBuilder() {
             funnel_stage: "consideration",
             sequence_position_context: "",
           }) as any,
+          personalStories: settings.personalStories || "",
+          customerStories: settings.customerStories || "",
+          controversialOpinions: settings.controversialOpinions || "",
+          originStory: settings.originStory || "",
         });
 
         toast({
@@ -276,6 +285,10 @@ export default function CampaignBuilder() {
           differentiation: formData.differentiation,
           transformationTimeline: formData.transformationTimeline,
           funnelContext: formData.funnelContext,
+          personalStories: formData.personalStories,
+          customerStories: formData.customerStories,
+          controversialOpinions: formData.controversialOpinions,
+          originStory: formData.originStory,
         },
         1,
         parseInt(formData.sequenceLength),
@@ -573,6 +586,18 @@ export default function CampaignBuilder() {
               onChange={(value) => setFormData({ ...formData, marketSophistication: value })}
             />
           </div>
+
+          {/* Personal Story Bank */}
+          <PersonalStoryInput
+            personalStories={formData.personalStories}
+            customerStories={formData.customerStories}
+            controversialOpinions={formData.controversialOpinions}
+            originStory={formData.originStory}
+            onPersonalStoriesChange={(value) => setFormData({ ...formData, personalStories: value })}
+            onCustomerStoriesChange={(value) => setFormData({ ...formData, customerStories: value })}
+            onControversialOpinionsChange={(value) => setFormData({ ...formData, controversialOpinions: value })}
+            onOriginStoryChange={(value) => setFormData({ ...formData, originStory: value })}
+          />
 
           {/* Voice & Tone */}
           <VoiceToneSelector
