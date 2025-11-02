@@ -37,7 +37,7 @@ export const UrlContentPreview = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+      <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>URL Content Preview</DialogTitle>
           <DialogDescription>
@@ -45,7 +45,7 @@ export const UrlContentPreview = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1 overflow-hidden">
           {/* Metadata */}
           <div className="space-y-2">
             <div className="flex items-start gap-2">
@@ -74,9 +74,9 @@ export const UrlContentPreview = ({
           </div>
 
           {/* Content Preview */}
-          <div>
+          <div className="flex-1 flex flex-col min-h-0">
             <h4 className="text-sm font-semibold mb-2">Extracted Content</h4>
-            <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+            <ScrollArea className="flex-1 w-full rounded-md border p-4">
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 <pre className="whitespace-pre-wrap text-sm font-sans">
                   {content}
@@ -86,7 +86,7 @@ export const UrlContentPreview = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
