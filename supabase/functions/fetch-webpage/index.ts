@@ -41,7 +41,14 @@ serve(async (req) => {
       formats: ['markdown'],
       onlyMainContent: false,  // Get everything to capture reviews
       excludeTags: ['script', 'style', 'iframe'],  // Only exclude non-content
-      waitFor: 2000  // Give more time for Amazon to load
+      waitFor: 3000,  // Give more time for Amazon to load
+      actions: [
+        // Click all "Read more" buttons to expand reviews
+        { type: 'click', selector: '[data-hook="review-collapsed"]' },
+        { type: 'click', selector: '.review-text-collapsed' },
+        { type: 'click', selector: 'a[data-hook="review-see-all-click"]' },
+        { type: 'wait', milliseconds: 1500 }  // Wait for content to expand
+      ]
     } : {
       url: url,
       formats: ['markdown'],
