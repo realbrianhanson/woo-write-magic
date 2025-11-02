@@ -492,14 +492,16 @@ export default function CampaignBuilder() {
               <Label htmlFor="price">Price Point</Label>
               <Input
                 id="price"
-                type="number"
+                type="text"
                 value={formData.price}
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
-                placeholder="97"
-                required
+                placeholder="97 (or 'Free' if no cost)"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter price or "Free" for free products/services
+              </p>
             </div>
           </div>
 
