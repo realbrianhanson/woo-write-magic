@@ -106,15 +106,13 @@ export function AudienceReviewsInput({ value, onChange, url = "", onUrlChange }:
     }
   };
 
-  const handleApproveUrlContent = () => {
-    if (urlPreview) {
-      onChange(value ? `${value}\n\n---\n\n${urlPreview.content}` : urlPreview.content);
-      toast({
-        title: "Content added!",
-        description: "Review page content has been added to your campaign.",
-      });
-      setUrlPreview(null);
-    }
+  const handleApproveUrlContent = (editedContent: string) => {
+    onChange(value ? `${value}\n\n---\n\n${editedContent}` : editedContent);
+    toast({
+      title: "Content added!",
+      description: "Review page content has been added to your campaign.",
+    });
+    setUrlPreview(null);
   };
 
   const handleCancelUrlContent = () => {

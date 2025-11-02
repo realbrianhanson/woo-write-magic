@@ -7,8 +7,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
 
 interface UrlContentPreviewProps {
   open: boolean;
@@ -19,7 +20,7 @@ interface UrlContentPreviewProps {
     title?: string;
     description?: string;
   };
-  onApprove: () => void;
+  onApprove: (editedContent: string) => void;
   onCancel: () => void;
 }
 
@@ -32,8 +33,18 @@ export const UrlContentPreview = ({
   onApprove,
   onCancel,
 }: UrlContentPreviewProps) => {
-  const wordCount = content.split(/\s+/).filter(Boolean).length;
-  const charCount = content.length;
+  const [editedContent, setEditedContent] = useState(content);
+  
+  useEffect(() => {
+    setEditedContent(content);
+  }, [content]);
+  
+  const wordCount = editedContent.split(/\s+/).filter(Boolean).length;
+  const charCount = editedContent.length;
+  
+  const handleApprove = () => {
+    onApprove(editedContent);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,14 +86,13 @@ export const UrlContentPreview = ({
 
           {/* Content Preview */}
           <div className="flex-1 flex flex-col min-h-0">
-            <h4 className="text-sm font-semibold mb-2">Extracted Content</h4>
-            <ScrollArea className="flex-1 w-full rounded-md border p-4">
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <pre className="whitespace-pre-wrap text-sm font-sans">
-                  {content}
-                </pre>
-              </div>
-            </ScrollArea>
+            <h4 className="text-sm font-semibold mb-2">Extracted Content (editable)</h4>
+            <Textarea
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              className="flex-1 min-h-[300px] font-mono text-sm resize-none"
+              placeholder="Edit the extracted content..."
+            />
           </div>
         </div>
 
@@ -90,7 +100,7 @@ export const UrlContentPreview = ({
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={onApprove}>
+          <Button onClick={handleApprove}>
             Use This Content
           </Button>
         </DialogFooter>
