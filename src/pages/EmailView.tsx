@@ -477,6 +477,23 @@ ${email.ctas[selectedCta]}`;
       
       console.log("Email body updated to:", improvedEmail.substring(0, 100) + "...");
 
+      // Auto-save to database
+      const { error: saveError } = await supabase
+        .from("emails")
+        .update({ 
+          body: improvedEmail,
+          metadata: { 
+            ...email.metadata,
+            metrics: analyzeReadability(improvedEmail),
+            readerFocus: newMetrics
+          } as any
+        })
+        .eq("id", id);
+
+      if (saveError) {
+        console.error("Failed to auto-save improved email:", saveError);
+      }
+
       toast({
         title: "Reader focus improved!",
         description: `Increased from ${readerFocusMetrics?.ratio}% to ${newMetrics.ratio}%`,
@@ -527,6 +544,22 @@ ${email.ctas[selectedCta]}`;
       // Recheck blandness
       const newBlandness = checkBlandness(humanizedEmail);
       setBlandnessResult(newBlandness);
+
+      // Auto-save to database
+      const { error: saveError } = await supabase
+        .from("emails")
+        .update({ 
+          body: humanizedEmail,
+          metadata: { 
+            ...email.metadata,
+            metrics: analyzeReadability(humanizedEmail)
+          } as any
+        })
+        .eq("id", id);
+
+      if (saveError) {
+        console.error("Failed to auto-save humanized email:", saveError);
+      }
 
       toast({
         title: "Email humanized!",
