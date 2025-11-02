@@ -63,6 +63,20 @@ serve(async (req) => {
     // Extract markdown content only (cleaner for copywriting)
     let content = scrapeResult.data?.markdown || '';
     
+    // Clean up the content - remove junk
+    content = content
+      // Remove image markdown: ![alt](url) and [![](url)](url)
+      .replace(/!\[.*?\]\(.*?\)/g, '')
+      // Remove standalone link markdown, keep just the text: [text](url) -> text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove multiple blank lines
+      .replace(/\n{3,}/g, '\n\n')
+      // Remove common navigation patterns
+      .replace(/\[Skip to content\]/gi, '')
+      .replace(/\[(Home|About|Contact|Menu|Navigation|Login|Sign Up|Register)\]/gi, '')
+      // Trim whitespace
+      .trim();
+    
     // Limit to reasonable length (first 10000 characters for better quality)
     if (content.length > 10000) {
       content = content.substring(0, 10000) + '...';
