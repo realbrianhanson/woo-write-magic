@@ -32,20 +32,32 @@ serve(async (req) => {
 
     console.log('Scraping webpage with Firecrawl:', url);
 
-    // Call Firecrawl API directly with content filtering
+    // Detect if this is an Amazon reviews page
+    const isAmazon = url.includes('amazon.com') || url.includes('amazon.');
+    
+    // For Amazon, we want ALL content including reviews, not just main content
+    const scrapeConfig = isAmazon ? {
+      url: url,
+      formats: ['markdown'],
+      onlyMainContent: false,  // Get everything to capture reviews
+      excludeTags: ['script', 'style', 'iframe'],  // Only exclude non-content
+      waitFor: 2000  // Give more time for Amazon to load
+    } : {
+      url: url,
+      formats: ['markdown'],
+      onlyMainContent: true,
+      excludeTags: ['nav', 'header', 'footer', 'aside', 'script', 'style', 'iframe'],
+      waitFor: 1000
+    };
+
+    // Call Firecrawl API
     const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        url: url,
-        formats: ['markdown'],
-        onlyMainContent: true,
-        excludeTags: ['nav', 'header', 'footer', 'aside', 'script', 'style', 'iframe'],
-        waitFor: 1000
-      })
+      body: JSON.stringify(scrapeConfig)
     });
 
     if (!firecrawlResponse.ok) {
@@ -63,6 +75,35 @@ serve(async (req) => {
     // Extract markdown content only (cleaner for copywriting)
     let content = scrapeResult.data?.markdown || '';
     
+    // For Amazon pages, extract ONLY reviews section
+    if (isAmazon && content) {
+      console.log('Processing Amazon page - extracting reviews only');
+      
+      // Look for review patterns in the content
+      const reviewPatterns = [
+        /##?\s*Customer [Rr]eviews?[\s\S]*$/,  // "Customer Reviews" heading and everything after
+        /##?\s*Reviews?[\s\S]*$/,              // "Reviews" heading and everything after
+        /##?\s*Top [Rr]eviews?[\s\S]*$/,       // "Top reviews" and everything after
+        /\d+\.\d+\s*out of 5[\s\S]*$/,         // Rating line and everything after
+      ];
+      
+      let reviewContent = '';
+      for (const pattern of reviewPatterns) {
+        const match = content.match(pattern);
+        if (match) {
+          reviewContent = match[0];
+          break;
+        }
+      }
+      
+      if (reviewContent) {
+        content = reviewContent;
+        console.log('Found review section, length:', content.length);
+      } else {
+        console.log('No review section found with patterns, returning full content');
+      }
+    }
+    
     // Clean up the content - remove junk
     content = content
       // Remove image markdown: ![alt](url) and [![](url)](url)
@@ -77,9 +118,9 @@ serve(async (req) => {
       // Trim whitespace
       .trim();
     
-    // Limit to reasonable length (first 10000 characters for better quality)
-    if (content.length > 10000) {
-      content = content.substring(0, 10000) + '...';
+    // Limit to reasonable length (20000 characters for reviews)
+    if (content.length > 20000) {
+      content = content.substring(0, 20000) + '...';
     }
 
     console.log('Successfully scraped webpage with Firecrawl');
