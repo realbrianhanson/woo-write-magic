@@ -6,6 +6,100 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to process Amazon content
+function processAmazonContent(content: string): string {
+  // For Amazon pages, extract ONLY reviews section from markdown
+  console.log('Processing Amazon page - extracting reviews only');
+  
+  // Look for review patterns in the content
+  const reviewPatterns = [
+    /##?\s*Customer [Rr]eviews?[\s\S]*$/,  // "Customer Reviews" heading and everything after
+    /##?\s*Reviews?[\s\S]*$/,              // "Reviews" heading and everything after
+    /##?\s*Top [Rr]eviews?[\s\S]*$/,       // "Top reviews" and everything after
+    /\d+\.\d+\s*out of 5[\s\S]*$/,         // Rating line and everything after
+  ];
+  
+  let reviewContent = '';
+  for (const pattern of reviewPatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      reviewContent = match[0];
+      break;
+    }
+  }
+  
+  if (reviewContent) {
+    content = reviewContent;
+    console.log('Found review section, length:', content.length);
+  } else {
+    console.log('No review section found with patterns, returning full content');
+  }
+
+  // Clean up the content - remove junk
+  content = content
+    // Remove image markdown: ![alt](url) and [![](url)](url)
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    // Remove standalone link markdown, keep just the text: [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove "Amazon Customer" labels
+    .replace(/Amazon Customer\s*/gi, '')
+    // Remove "Customer reviews" header section
+    .replace(/Customer [Rr]eviews\s*/gi, '')
+    // Remove star ratings (4.5 out of 5 stars, etc.)
+    .replace(/_?\d+\.?\d*\s*out of\s*\d+\s*stars?_?/gi, '')
+    .replace(/\d+\.?\d*\s*out of\s*\d+/gi, '')
+    // Remove image review labels
+    .replace(/Images in this review\s*/gi, '')
+    .replace(/Reviews with images\s*/gi, '')
+    .replace(/See all photos\s*/gi, '')
+    .replace(/All photos\s*/gi, '')
+    // Remove pagination
+    .replace(/_?Previous page_?\s*/gi, '')
+    .replace(/_?Next page_?\s*/gi, '')
+    // Remove numbered lists (standalone numbers 1. 2. 3. etc.)
+    .replace(/^\d+\.\s*$/gm, '')
+    // Remove global ratings count
+    .replace(/\d+[,\d]*\s*global ratings?/gi, '')
+    // Remove Amazon explanation text
+    .replace(/Customer Reviews,.*?work on Amazon/gis, '')
+    .replace(/Learn more how customers reviews work on Amazon/gi, '')
+    // Remove "Review this product" section
+    .replace(/Review this product\s*/gi, '')
+    .replace(/Share your thoughts with other customers\s*/gi, '')
+    .replace(/Write a customer review\s*/gi, '')
+    // Remove Amazon rating breakdowns (5 star4 star3 star... lines)
+    .replace(/[-•]\s*\d+\s*star\d+\s*star\d+\s*star\d+\s*star\d+\s*star.*/gi, '')
+    // Remove percentage lines (65%27%7%1%0%...)
+    .replace(/\d+%\d+%\d+%\d+%\d+%.*/g, '')
+    // Remove "How customer reviews and ratings work"
+    .replace(/How customer reviews and ratings work/gi, '')
+    // Remove "Select to learn more" sections
+    .replace(/Select to learn more[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '')
+    // Remove customer mention statistics (e.g., "84 customers mention...")
+    .replace(/\d+\s+customers?\s+mention\s+"[^"]+"\d+\s+positive\d+\s+negative/gi, '')
+    // Remove markdown horizontal rules (*** or * * *)
+    .replace(/^\s*\*\s*\*\s*\*\s*$/gm, '')
+    .replace(/^[-*_]{3,}\s*$/gm, '')
+    // Remove markdown heading markers (### ## #)
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove backslash line breaks
+    .replace(/\\\\/g, '')
+    // Remove multiple blank lines
+    .replace(/\n{3,}/g, '\n\n')
+    // Remove common navigation patterns
+    .replace(/\[Skip to content\]/gi, '')
+    .replace(/\[(Home|About|Contact|Menu|Navigation|Login|Sign Up|Register)\]/gi, '')
+    // Trim whitespace
+    .trim();
+  
+  // Limit to reasonable length (50000 characters for reviews - roughly 30-40 full reviews)
+  if (content.length > 50000) {
+    content = content.substring(0, 50000) + '\n\n[Content truncated - showing first 50,000 characters]';
+  }
+  
+  return content;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -35,29 +129,90 @@ serve(async (req) => {
     // Detect if this is an Amazon reviews page
     const isAmazon = url.includes('amazon.com') || url.includes('amazon.');
     
-    // For Amazon, we want ALL content including reviews, not just main content
-    const scrapeConfig = isAmazon ? {
-      url: url,
-      formats: ['markdown', 'html'],  // Get both formats to extract hidden content
-      onlyMainContent: false,  // Get everything to capture reviews
-      excludeTags: ['script', 'style', 'iframe'],  // Only exclude non-content
-      waitFor: 5000  // Give more time for Amazon to fully render
-    } : {
-      url: url,
-      formats: ['markdown'],
-      onlyMainContent: true,
-      excludeTags: ['nav', 'header', 'footer', 'aside', 'script', 'style', 'iframe'],
-      waitFor: 1000
-    };
-
-    // Call Firecrawl API
+    // For Amazon reviews, fetch multiple pages
+    if (isAmazon) {
+      console.log('Detected Amazon page - fetching 3 pages of reviews');
+      const allContent: string[] = [];
+      
+      // Fetch 3 pages of reviews
+      for (let page = 1; page <= 3; page++) {
+        try {
+          // Construct page URL
+          const pageUrl = page === 1 
+            ? url 
+            : url.includes('?') 
+              ? `${url}&pageNumber=${page}`
+              : `${url}?pageNumber=${page}`;
+          
+          console.log(`Fetching page ${page}:`, pageUrl);
+          
+          const pageResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: pageUrl,
+              formats: ['markdown'],
+              onlyMainContent: false,
+              excludeTags: ['script', 'style', 'iframe'],
+              waitFor: 5000
+            })
+          });
+          
+          if (pageResponse.ok) {
+            const pageResult = await pageResponse.json();
+            if (pageResult.success && pageResult.data?.markdown) {
+              allContent.push(pageResult.data.markdown);
+              console.log(`Successfully fetched page ${page}, content length:`, pageResult.data.markdown.length);
+            }
+          } else {
+            console.log(`Failed to fetch page ${page}:`, pageResponse.status);
+          }
+        } catch (error) {
+          console.error(`Error fetching page ${page}:`, error);
+        }
+      }
+      
+      // Combine all pages
+      const combinedContent = allContent.join('\n\n');
+      console.log('Total content from all pages:', combinedContent.length);
+      
+      // Process the combined content
+      const processedContent = processAmazonContent(combinedContent);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          content: processedContent,
+          url: url,
+          metadata: {
+            title: 'Amazon Reviews (3 Pages)',
+            description: `Scraped ${allContent.length} pages of reviews`,
+          }
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    // For non-Amazon pages, use single request
     const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(scrapeConfig)
+      body: JSON.stringify({
+        url: url,
+        formats: ['markdown'],
+        onlyMainContent: true,
+        excludeTags: ['nav', 'header', 'footer', 'aside', 'script', 'style', 'iframe'],
+        waitFor: 1000
+      })
     });
 
     if (!firecrawlResponse.ok) {
@@ -72,121 +227,7 @@ serve(async (req) => {
       throw new Error('Failed to scrape webpage with Firecrawl');
     }
 
-    // Extract markdown content only (cleaner for copywriting)
-    let content = scrapeResult.data?.markdown || '';
-    
-    // For Amazon, try to get full review text from HTML if available
-    if (isAmazon && scrapeResult.data?.html) {
-      console.log('Processing Amazon HTML for full reviews');
-      const html = scrapeResult.data.html;
-      
-      // Extract full review text from HTML (Amazon hides it in data attributes or spans)
-      const reviewMatches = html.match(/data-hook="review-body"[^>]*>[\s\S]*?<\/span>/gi);
-      if (reviewMatches && reviewMatches.length > 0) {
-        console.log('Found', reviewMatches.length, 'reviews in HTML');
-        // Extract just the text content from each review span
-        const fullReviews = reviewMatches.map((match: string) => {
-          // Remove HTML tags but keep the text
-          return match.replace(/<[^>]+>/g, '').trim();
-        }).join('\n\n');
-        
-        if (fullReviews) {
-          content = fullReviews;
-          console.log('Extracted full reviews from HTML, length:', content.length);
-        }
-      }
-    }
-    
-    // For Amazon pages, extract ONLY reviews section from markdown if HTML extraction failed
-    if (isAmazon && content && !scrapeResult.data?.html) {
-      console.log('Processing Amazon page - extracting reviews only');
-      
-      // Look for review patterns in the content
-      const reviewPatterns = [
-        /##?\s*Customer [Rr]eviews?[\s\S]*$/,  // "Customer Reviews" heading and everything after
-        /##?\s*Reviews?[\s\S]*$/,              // "Reviews" heading and everything after
-        /##?\s*Top [Rr]eviews?[\s\S]*$/,       // "Top reviews" and everything after
-        /\d+\.\d+\s*out of 5[\s\S]*$/,         // Rating line and everything after
-      ];
-      
-      let reviewContent = '';
-      for (const pattern of reviewPatterns) {
-        const match = content.match(pattern);
-        if (match) {
-          reviewContent = match[0];
-          break;
-        }
-      }
-      
-      if (reviewContent) {
-        content = reviewContent;
-        console.log('Found review section, length:', content.length);
-      } else {
-        console.log('No review section found with patterns, returning full content');
-      }
-    }
-    
-    // Clean up the content - remove junk
-    content = content
-      // Remove image markdown: ![alt](url) and [![](url)](url)
-      .replace(/!\[.*?\]\(.*?\)/g, '')
-      // Remove standalone link markdown, keep just the text: [text](url) -> text
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      // Remove "Amazon Customer" labels
-      .replace(/Amazon Customer\s*/gi, '')
-      // Remove "Customer reviews" header section
-      .replace(/Customer [Rr]eviews\s*/gi, '')
-      // Remove star ratings (4.5 out of 5 stars, etc.)
-      .replace(/_?\d+\.?\d*\s*out of\s*\d+\s*stars?_?/gi, '')
-      .replace(/\d+\.?\d*\s*out of\s*\d+/gi, '')
-      // Remove image review labels
-      .replace(/Images in this review\s*/gi, '')
-      .replace(/Reviews with images\s*/gi, '')
-      .replace(/See all photos\s*/gi, '')
-      .replace(/All photos\s*/gi, '')
-      // Remove pagination
-      .replace(/_?Previous page_?\s*/gi, '')
-      .replace(/_?Next page_?\s*/gi, '')
-      // Remove numbered lists (standalone numbers 1. 2. 3. etc.)
-      .replace(/^\d+\.\s*$/gm, '')
-      // Remove global ratings count
-      .replace(/\d+[,\d]*\s*global ratings?/gi, '')
-      // Remove Amazon explanation text
-      .replace(/Customer Reviews,.*?work on Amazon/gis, '')
-      .replace(/Learn more how customers reviews work on Amazon/gi, '')
-      // Remove "Review this product" section
-      .replace(/Review this product\s*/gi, '')
-      .replace(/Share your thoughts with other customers\s*/gi, '')
-      .replace(/Write a customer review\s*/gi, '')
-      // Remove Amazon rating breakdowns (5 star4 star3 star... lines)
-      .replace(/[-•]\s*\d+\s*star\d+\s*star\d+\s*star\d+\s*star\d+\s*star.*/gi, '')
-      // Remove percentage lines (65%27%7%1%0%...)
-      .replace(/\d+%\d+%\d+%\d+%\d+%.*/g, '')
-      // Remove "How customer reviews and ratings work"
-      .replace(/How customer reviews and ratings work/gi, '')
-      // Remove "Select to learn more" sections
-      .replace(/Select to learn more[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '')
-      // Remove customer mention statistics (e.g., "84 customers mention...")
-      .replace(/\d+\s+customers?\s+mention\s+"[^"]+"\d+\s+positive\d+\s+negative/gi, '')
-      // Remove markdown horizontal rules (*** or * * *)
-      .replace(/^\s*\*\s*\*\s*\*\s*$/gm, '')
-      .replace(/^[-*_]{3,}\s*$/gm, '')
-      // Remove markdown heading markers (### ## #)
-      .replace(/^#{1,6}\s+/gm, '')
-      // Remove backslash line breaks
-      .replace(/\\\\/g, '')
-      // Remove multiple blank lines
-      .replace(/\n{3,}/g, '\n\n')
-      // Remove common navigation patterns
-      .replace(/\[Skip to content\]/gi, '')
-      .replace(/\[(Home|About|Contact|Menu|Navigation|Login|Sign Up|Register)\]/gi, '')
-      // Trim whitespace
-      .trim();
-    
-    // Limit to reasonable length (50000 characters for reviews - roughly 30-40 full reviews)
-    if (content.length > 50000) {
-      content = content.substring(0, 50000) + '\n\n[Content truncated - use "See all reviews" page for more reviews]';
-    }
+    const content = scrapeResult.data?.markdown || '';
 
     console.log('Successfully scraped webpage with Firecrawl');
 
