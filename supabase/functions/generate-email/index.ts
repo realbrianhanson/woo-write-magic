@@ -181,8 +181,7 @@ Deno.serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Unknown error occurred",
-        details: error instanceof Error ? error.stack : String(error)
+        error: "An unexpected error occurred"
       }),
       {
         status: 500,
