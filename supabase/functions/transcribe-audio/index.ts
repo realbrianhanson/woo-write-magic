@@ -54,6 +54,9 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const authFail = await requireAuth(req);
+  if (authFail) return authFail;
+
   try {
     const { audio } = await req.json();
     
