@@ -119,6 +119,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authFail = await requireAuth(req);
+  if (authFail) return authFail;
+
   try {
     const { url } = await req.json();
     
